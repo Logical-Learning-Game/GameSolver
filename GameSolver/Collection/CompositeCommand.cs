@@ -6,13 +6,14 @@ namespace GameSolver.Collection
     {
         public List<BaseCommand> Commands { get; init; } = new();
 
-        public CompositeCommand()
+        public CompositeCommand(int quantity = 1)
         {
-            Quantity = 1;
+            Quantity = quantity;
         }
 
-        public CompositeCommand(int quantity)
+        public CompositeCommand(List<BaseCommand> commands, int quantity = 1)
         {
+            Commands = commands;
             Quantity = quantity;
         }
 
@@ -85,11 +86,6 @@ namespace GameSolver.Collection
                 Commands = new List<BaseCommand>(Commands),
                 Quantity = Quantity
             };
-        }
-
-        public override int CompareTo(BaseCommand? other)
-        {
-            throw new NotImplementedException();
         }
 
         public override IIterator<GameAction> CommandIterator()

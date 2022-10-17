@@ -48,11 +48,6 @@ namespace GameSolver.Collection
             };
         }
 
-        public override int CompareTo(BaseCommand? other)
-        {
-            return 0;
-        }
-
         public override IIterator<GameAction> CommandIterator()
         {
             return new CommandIterator(this);

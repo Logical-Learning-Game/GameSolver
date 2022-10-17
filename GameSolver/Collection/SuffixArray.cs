@@ -1,4 +1,6 @@
-﻿namespace GameSolver.Collection
+﻿using System.Text;
+
+namespace GameSolver.Collection
 {
     public class SuffixArray
     {
@@ -14,11 +16,22 @@
             var suffixes = new Suffix[commandsLength];
             for (int i = 0; i < commandsLength; i++)
             {
-                suffixes[i] = new Suffix
-                {
-                    Index = i,
+                List<BaseCommand> slicedList = commandsList.Skip(i).ToList();
+                var slicedCompositeCommand = new CompositeCommand(slicedList);
+                suffixes[i] = new Suffix(i, slicedCompositeCommand);
+            }
 
-                };
+            Array.Sort(suffixes);
+
+            foreach (Suffix s in suffixes)
+            {
+                var strBuilder = new StringBuilder();
+                foreach (BaseCommand c in s.SuffixCommands.Commands)
+                {
+                    strBuilder.Append(c.ToRegex());
+                }
+
+                Console.WriteLine($"index: {s.Index} suffix: {strBuilder}");
             }
         }
     }

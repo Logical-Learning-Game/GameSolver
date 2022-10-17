@@ -5,26 +5,19 @@ namespace GameSolver.Collection
     public class Suffix : IComparable<Suffix>
     {
         public int Index { get; set; }
-        public List<BaseCommand>? List { get; set; }
+        public CompositeCommand SuffixCommands { get; set; }
 
-        public Suffix() { }
-
-        public Suffix(int index, List<BaseCommand> list)
+        public Suffix(int index, CompositeCommand commands)
         {
             Index = index;
-            List = list;
+            SuffixCommands = commands;
         }
 
         public override string ToString()
         {
-            if (List == null)
-            {
-                return string.Empty;
-            }
-
             var strBuilder = new StringBuilder();
 
-            foreach (BaseCommand c in List)
+            foreach (BaseCommand c in SuffixCommands.Commands)
             {
                 strBuilder.Append(c.ToFullString());
             }
@@ -34,7 +27,12 @@ namespace GameSolver.Collection
 
         public int CompareTo(Suffix? other)
         {
-            return 0;
+            if (other == null)
+            {
+                return 1;
+            }
+
+            return SuffixCommands.CompareTo(other.SuffixCommands);
         }
     }
 }

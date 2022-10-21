@@ -22,7 +22,7 @@
             while (i < commands.Count)
             {
                 int count = 0;
-                while (i < commands.Count - 1 && commands[i].Equals(commands[i + 1]))
+                while (i < commands.Count - 1 && commands[i].EqualAction(commands[i + 1]))
                 {
                     count += commands[i].Quantity;
                     i++;

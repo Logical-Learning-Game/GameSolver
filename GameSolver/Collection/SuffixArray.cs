@@ -1,10 +1,9 @@
-﻿using System.Text;
-
-namespace GameSolver.Collection
+﻿namespace GameSolver.Collection
 {
     public class SuffixArray
     {
         public CompositeCommand CompositeCommand { get; init; }
+        public int[] Indexs { get; init; }
 
         public SuffixArray(CompositeCommand commands)
         {
@@ -23,16 +22,51 @@ namespace GameSolver.Collection
 
             Array.Sort(suffixes);
 
-            foreach (Suffix s in suffixes)
+            var suffixArray = new int[commandsLength];
+            for (int i = 0; i < commandsLength; i++)
             {
-                var strBuilder = new StringBuilder();
-                foreach (BaseCommand c in s.SuffixCommands.Commands)
+                suffixArray[i] = suffixes[i].Index;
+            }
+
+            Indexs = suffixArray;
+        }
+
+        public int[] LeastCommonPrefixArray()
+        {
+            int suffixArrSize = Indexs.Length;
+
+            var lcpArray = new int[suffixArrSize];
+
+            var invSuff = new int[suffixArrSize];
+            for (int i = 0; i < suffixArrSize; i++)
+            {
+                invSuff[Indexs[i]] = i;
+            }
+
+            int k = 0;
+            for (int i = 0; i < suffixArrSize; i++)
+            {
+                if (invSuff[i] == suffixArrSize - 1)
                 {
-                    strBuilder.Append(c.ToRegex());
+                    k = 0;
+                    continue;
                 }
 
-                Console.WriteLine($"index: {s.Index} suffix: {strBuilder}");
+                int j = Indexs[invSuff[i] + 1];
+                List<BaseCommand> commands = CompositeCommand.Commands;
+                while (i + k < suffixArrSize && j + k < suffixArrSize && commands[i + k].Equals(commands[j + k]))
+                {
+                    k++;
+                }
+
+                lcpArray[invSuff[i]] = k;
+
+                if (k > 0)
+                {
+                    k--;
+                }
             }
+            return lcpArray;
         }
     }
 }

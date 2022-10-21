@@ -4,12 +4,23 @@
     {
         public int Quantity { get; set; }
 
+        // Object clone
         public abstract object Clone();
-        public abstract bool Equals(BaseCommand? other);
+        
+        // String representation
         public abstract string ToRegex();
         public abstract string ToFullString();
+
+        // Iterator
         public abstract IIterator<GameAction> CommandIterator();
 
+        // Equality check
+        // Exact match - action and quantity between two instance must be the same to be equal
+        public abstract bool Equals(BaseCommand? other);
+        // Only action match require to be equal action
+        public abstract bool EqualAction(BaseCommand? other);
+
+        // Sorting
         public int CompareTo(BaseCommand? other)
         {
             if (other == null)

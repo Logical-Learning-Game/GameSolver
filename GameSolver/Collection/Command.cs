@@ -33,11 +33,6 @@ namespace GameSolver.Collection
             return strBuilder.ToString();
         }
 
-        public override bool Equals(BaseCommand? other)
-        {
-            return other is Command otherCommand && Action == otherCommand.Action;
-        }
-
         public override object Clone()
         {
             return new Command
@@ -51,6 +46,23 @@ namespace GameSolver.Collection
         public override IIterator<GameAction> CommandIterator()
         {
             return new CommandIterator(this);
+        }
+
+        public override bool Equals(BaseCommand? other)
+        {
+            return other is Command otherCommand
+                && EqualActionSameType(otherCommand)
+                && Quantity == otherCommand.Quantity;
+        }
+
+        public override bool EqualAction(BaseCommand? other)
+        {
+            return other is Command otherCommand && EqualActionSameType(otherCommand);
+        }
+
+        private bool EqualActionSameType(Command otherCommand)
+        {
+            return Action == otherCommand.Action;
         }
     }
 }

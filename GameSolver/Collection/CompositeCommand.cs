@@ -35,7 +35,7 @@ namespace GameSolver.Collection
             {
                 strBuilder.Append(c.ToRegex());
             }
-            return Quantity > 1 ? $"({strBuilder}){{{Quantity}}}" : $"({strBuilder})";
+            return Quantity > 1 ? $"({strBuilder}){{{Quantity}}}" : $"{strBuilder}";
         }
 
         public override string ToFullString()
@@ -59,24 +59,7 @@ namespace GameSolver.Collection
             {
                 return false;
             }
-
-            if (otherComposite.Commands.Count != Commands.Count)
-            {
-                return false;
-            }
-
-            bool isEqual = true;
-            for (int i = 0; i < Commands.Count; i++)
-            {
-                isEqual = isEqual && Commands[i].Equals(otherComposite.Commands[i])
-                    && Commands[i].Quantity == otherComposite.Commands[i].Quantity;
-                if (!isEqual)
-                {
-                    return false;
-                }
-            }
-
-            return isEqual;
+            return otherComposite.Quantity == Quantity && EqualActionSameType(otherComposite);
         }
 
         public override object Clone()
@@ -91,6 +74,51 @@ namespace GameSolver.Collection
         public override IIterator<GameAction> CommandIterator()
         {
             return new CompositeCommandIterator(this);
+        }
+
+        public override bool EqualAction(BaseCommand? other)
+        {
+            if (other is not CompositeCommand otherComposite)
+            {
+                return false;
+            }
+
+            return EqualActionSameType(otherComposite);
+        }
+
+        public CompositeCommand Skip(int n)
+        {
+            return new CompositeCommand(Commands.Skip(n).ToList(), Quantity);
+        }
+
+        public CompositeCommand Take(int n)
+        {
+            return new CompositeCommand(Commands.Take(n).ToList(), Quantity);
+        }
+
+        public override string ToString()
+        {
+            return ToRegex();
+        }
+
+        private bool EqualActionSameType(CompositeCommand otherComposite)
+        {
+            if (otherComposite.Commands.Count != Commands.Count)
+            {
+                return false;
+            }
+
+            bool isEqual = true;
+            for (int i = 0; i < Commands.Count; i++)
+            {
+                isEqual = isEqual && Commands[i].Equals(otherComposite.Commands[i]);
+                if (!isEqual)
+                {
+                    return false;
+                }
+            }
+
+            return isEqual;
         }
     }
 }

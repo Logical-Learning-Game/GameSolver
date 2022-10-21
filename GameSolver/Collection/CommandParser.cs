@@ -22,6 +22,7 @@
                 GameAction.Up => new Command(GameAction.Up, 1),
                 GameAction.Left => new Command(GameAction.Left, 1),
                 GameAction.Right => new Command(GameAction.Right, 1),
+                GameAction.Down => new Command(GameAction.Down, 1),
                 _ => throw new Exception($"cannot select any action from {(char)action}"),
             };
             return command;
@@ -32,12 +33,6 @@
             if (Text.Length == 0)
             {
                 return new CompositeCommand();
-            }
-
-            if (Text.Length == 1)
-            {
-                Command singleCommand = TypeSelect(Text[0]);
-                return singleCommand;
             }
 
             var compositeCommand = new CompositeCommand();

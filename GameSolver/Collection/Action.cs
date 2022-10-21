@@ -4,6 +4,7 @@
     {
         Up = 'u',
         Left = 'l',
-        Right = 'r'
+        Right = 'r',
+        Down = 'd'
     }
 }

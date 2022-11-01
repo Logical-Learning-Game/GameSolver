@@ -1,6 +1,7 @@
-﻿using System.Text;
+﻿using GameSolver.Collection.Iterator;
+using GameSolver.Game;
 
-namespace GameSolver.Collection
+namespace GameSolver.Collection.Encoder
 {
     public struct PatternResult
     {
@@ -222,7 +223,7 @@ namespace GameSolver.Collection
             // Result
             rangePairs = rangePairs.OrderBy(t => t.Item1).ToList();
 
-            var result = new PatternResult()
+            var result = new PatternResult
             {
                 CommandsPattern = EncodingCommand.Take(commandPrefix).Skip(commandPrefix - patternSuffix),
                 Ranges = rangePairs,

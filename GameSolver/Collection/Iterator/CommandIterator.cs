@@ -1,4 +1,6 @@
-﻿namespace GameSolver.Collection
+﻿using GameSolver.Game;
+
+namespace GameSolver.Collection.Iterator
 {
     public class CommandIterator : IIterator<GameAction>
     {

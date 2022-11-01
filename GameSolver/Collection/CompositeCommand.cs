@@ -1,13 +1,16 @@
-﻿using System.Text;
+﻿using GameSolver.Collection.Iterator;
+using GameSolver.Game;
+using System.Text;
 
 namespace GameSolver.Collection
 {
     public class CompositeCommand : BaseCommand
     {
-        public List<BaseCommand> Commands { get; init; } = new();
+        public List<BaseCommand> Commands { get; init; }
 
         public CompositeCommand(int quantity = 1)
         {
+            Commands = new List<BaseCommand>();
             Quantity = quantity;
         }
 
@@ -20,11 +23,6 @@ namespace GameSolver.Collection
         public void AddCommand(BaseCommand command)
         {
             Commands.Add(command);
-        }
-
-        public BaseCommand At(int index)
-        {
-            return Commands[index];
         }
 
         public override string ToRegex()

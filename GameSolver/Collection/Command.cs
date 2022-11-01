@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using GameSolver.Collection.Iterator;
+using GameSolver.Game;
+using System.Text;
 
 namespace GameSolver.Collection
 {

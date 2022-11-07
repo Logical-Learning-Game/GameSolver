@@ -1,4 +1,5 @@
 ﻿using GameSolver.Game;
+using System.Text;
 
 namespace GameSolver.Collection
 {
@@ -9,6 +10,18 @@ namespace GameSolver.Collection
         public CommandParser(string text)
         {
             Text = text;
+        }
+
+        public CommandParser(List<GameAction> actions)
+        {
+            var strBuilder = new StringBuilder();
+
+            foreach (GameAction action in actions)
+            {
+                strBuilder.Append((char)action);
+            }
+
+            Text = strBuilder.ToString();
         }
 
         private static Command TypeSelect(char c)

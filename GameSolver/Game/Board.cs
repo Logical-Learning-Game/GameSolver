@@ -41,21 +41,34 @@ namespace GameSolver.Game
 
     public class Board : ICloneable
     {
-        public List<int> ZobristTable { get; init; }
+        public HashComponent HashComponent { get; init; }
+        public HashSetting HashSetting { get; set; }
         public int Score { get; init; }
         public int RemainingScore { get; set; }
         public PlayerPosition Player { get; set; }
         public Tile[,] Matrix { get; init; }
         public TileManager TileManager { get; set; }
 
-        public Board(Tile[,] board, PlayerPosition player, TileManager tileManager, List<int> zobristTable, int score, int remainingScore)
+        public Board(Tile[,] board, PlayerPosition player, TileManager tileManager, HashSetting hashSetting, int score, int remainingScore)
         {
             Matrix = board;
             Score = score;
             RemainingScore = remainingScore;
             Player = player;
-            ZobristTable = zobristTable;
             TileManager = tileManager;
+            HashSetting = hashSetting;
+            HashComponent = new HashComponent(this);
+        }
+
+        public Board(Tile[,] board, PlayerPosition player, HashComponent hashComponent, TileManager tileManager, HashSetting hashSetting, int score, int remainingScore)
+        {
+            Matrix = board;
+            Score = score;
+            RemainingScore = remainingScore;
+            Player = player;
+            TileManager = tileManager;
+            HashSetting = hashSetting;
+            HashComponent = hashComponent;
         }
 
         public static Board FromString(string board)
@@ -169,12 +182,12 @@ namespace GameSolver.Game
             switch (action)
             {
                 case GameAction.Left:
-                    nextDx = -dy;
-                    nextDy = dx;
-                    break;
-                case GameAction.Right:
                     nextDx = dy;
                     nextDy = -dx;
+                    break;
+                case GameAction.Right:
+                    nextDx = -dy;
+                    nextDy = +dx;
                     break;
                 case GameAction.Up:
                     nextDx = dx;
@@ -275,16 +288,39 @@ namespace GameSolver.Game
             }
 
             var emptyTileManager = new TileManager();
-            var zobristTable = new List<int>();
+            var emptyHashSetting = new HashSetting();
 
-            return new Board(boardMatrix, player, emptyTileManager, zobristTable, score, score);
+            var board = new Board(boardMatrix, player, emptyTileManager, emptyHashSetting, score, score);
+            return board;
+        }
+
+        public long Hash()
+        {
+            int height = Matrix.GetLength(0);
+            int width = Matrix.GetLength(1);
+
+            long hashValue = 0;
+            int tileIdx = 0;
+            for (int i = 0; i < height; i++)
+            {
+                for (int j = 0; j < width; j++)
+                {
+                    if (HashSetting.HashTiles.Contains(Matrix[i, j]))
+                    {
+                        int tileValue = Utility.TileValue[Matrix[i, j]];
+                        hashValue ^= HashComponent.ZobristTable[tileIdx, tileValue];
+                    }
+                    tileIdx++;
+                }
+            }
+            return hashValue;
         }
 
         public object Clone()
         {
             var copyMatrix = (Tile[,])Matrix.Clone();
             var copyPlayerPosition = (PlayerPosition)Player.Clone();
-            return new Board(copyMatrix, copyPlayerPosition, TileManager, ZobristTable, Score, RemainingScore);
+            return new Board(copyMatrix, copyPlayerPosition, HashComponent, TileManager, HashSetting, Score, RemainingScore);
         }
     }
 }

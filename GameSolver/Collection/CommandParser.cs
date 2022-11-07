@@ -43,13 +43,8 @@ namespace GameSolver.Collection
             return command;
         }
 
-        public BaseCommand Parse()
+        public CompositeCommand Parse()
         {
-            if (Text.Length == 0)
-            {
-                return new CompositeCommand();
-            }
-
             var compositeCommand = new CompositeCommand();
             foreach (char c in Text)
             {

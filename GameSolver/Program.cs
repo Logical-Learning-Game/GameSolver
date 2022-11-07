@@ -39,15 +39,6 @@ static void TestPatternEncoder()
 }
 TestPatternEncoder();
 
-//static List<GameAction> Solution(State state)
-//{
-//    List<GameAction> result = new();
-//    while (state.Action != null)
-//    {
-//        result.Add((GameAction)state.Action);
-//        state = state.PrevState;
-//    }
-//}
 
 static void TestGameBoard()
 {
@@ -73,76 +64,29 @@ static void TestGameBoard()
         HashTiles = new HashSet<Tile> { Tile.Player, Tile.Score, Tile.Goal }
     };
 
-    //Console.WriteLine("Board:");
+    Console.WriteLine("Board:");
 
-    //List<GameAction> validActions = board.GetValidActions();
-    //PrintList(validActions);
-    //Console.WriteLine($"Hash: {board.Hash()}");
-    //Console.WriteLine(board);
-
-
-    //Board updatedBoard = board.Update(GameAction.Right);
-    //validActions = updatedBoard.GetValidActions();
-    //PrintList(validActions);
-    //Console.WriteLine($"Hash: {updatedBoard.Hash()}");
-    //Console.WriteLine(updatedBoard);
+    List<GameAction> validActions = board.GetValidActions();
+    PrintList(validActions);
+    Console.WriteLine($"Hash: {board.Hash()}");
+    Console.WriteLine(board);
 
 
-    //updatedBoard = updatedBoard.Update(GameAction.Down);
-    //validActions = updatedBoard.GetValidActions();
-    //PrintList(validActions);
-    //Console.WriteLine($"Hash: {updatedBoard.Hash()}");
-    //Console.WriteLine(updatedBoard);
-
-    
-
-    
-
-    //var bfsSolver = new BFSSolver(board);
-    //finalState = bfsSolver.Solve();
-
-    //if (finalState != null)
-    //{
-    //    List<GameAction> result = finalState.Solution();
-    //    foreach (GameAction action in result)
-    //    {
-    //        Console.Write((char)action);
-    //    }
-    //    Console.WriteLine();
-    //}
-    //else
-    //{
-    //    Console.WriteLine("No solution");
-    //}
+    Board updatedBoard = board.Update(GameAction.Right);
+    validActions = updatedBoard.GetValidActions();
+    PrintList(validActions);
+    Console.WriteLine($"Hash: {updatedBoard.Hash()}");
+    Console.WriteLine(updatedBoard);
 
 
+    updatedBoard = updatedBoard.Update(GameAction.Down);
+    validActions = updatedBoard.GetValidActions();
+    PrintList(validActions);
+    Console.WriteLine($"Hash: {updatedBoard.Hash()}");
+    Console.WriteLine(updatedBoard);
     Console.WriteLine();
 }
 TestGameBoard();
-
-//static void PrintArray(int[,] arr)
-//{
-//    foreach (int n in arr)
-//    {
-//        Console.Write(n);
-//    }
-//    Console.WriteLine();
-//}
-
-//int[,] a = { { 1, 2 }, { 3, 4 } };
-//int[,] copy = (int[,])a.Clone();
-//a[0, 0] = 9;
-
-//PrintArray(a);
-//PrintArray(copy);
-
-//static void TestRandomSeed()
-//{
-//    var random = new Random();
-//    long a = random.NextInt64();
-//    Console.WriteLine(a);
-//}
-//TestRandomSeed();
 
 
 static void TestGameSolution()

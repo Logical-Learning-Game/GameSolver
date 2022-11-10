@@ -1,4 +1,4 @@
-﻿namespace GameSolver.Collection
+﻿namespace GameSolver.Collection.Encoder
 {
     public class RunLengthEncoder
     {

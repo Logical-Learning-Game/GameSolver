@@ -1,4 +1,7 @@
-﻿namespace GameSolver.Collection
+﻿using GameSolver.Collection.Iterator;
+using GameSolver.Game;
+
+namespace GameSolver.Collection
 {
     public abstract class BaseCommand : ICloneable, IEquatable<BaseCommand>, IComparable<BaseCommand>
     {

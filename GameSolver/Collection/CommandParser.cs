@@ -1,4 +1,7 @@
-﻿namespace GameSolver.Collection
+﻿using GameSolver.Game;
+using System.Text;
+
+namespace GameSolver.Collection
 {
     public class CommandParser
     {
@@ -7,6 +10,18 @@
         public CommandParser(string text)
         {
             Text = text;
+        }
+
+        public CommandParser(List<GameAction> actions)
+        {
+            var strBuilder = new StringBuilder();
+
+            foreach (GameAction action in actions)
+            {
+                strBuilder.Append((char)action);
+            }
+
+            Text = strBuilder.ToString();
         }
 
         private static Command TypeSelect(char c)
@@ -28,13 +43,8 @@
             return command;
         }
 
-        public BaseCommand Parse()
+        public CompositeCommand Parse()
         {
-            if (Text.Length == 0)
-            {
-                return new CompositeCommand();
-            }
-
             var compositeCommand = new CompositeCommand();
             foreach (char c in Text)
             {

@@ -1,4 +1,4 @@
-﻿namespace GameSolver.Collection
+﻿namespace GameSolver.Game
 {
     public enum GameAction
     {

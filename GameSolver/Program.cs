@@ -37,7 +37,7 @@ static void TestPatternEncoder()
 
     Console.WriteLine();
 }
-TestPatternEncoder();
+//TestPatternEncoder();
 
 
 static void TestGameBoard()
@@ -86,7 +86,7 @@ static void TestGameBoard()
     Console.WriteLine(updatedBoard);
     Console.WriteLine();
 }
-TestGameBoard();
+//TestGameBoard();
 
 
 static void TestGameSolution()
@@ -134,4 +134,23 @@ static void TestGameSolution()
         Console.WriteLine("No solution");
     }
 }
-TestGameSolution();
+//TestGameSolution();
+
+
+static void TestNewGame()
+{
+    Console.WriteLine("Test new game");
+
+    string boardStr = @"
+        ....*..xx
+		.x.x.x.xx
+		..*.x.*..
+		.x.x.x.x.
+		P.......G
+    ";
+
+
+    var game = new Game(boardStr, Direction.Up);
+    Console.WriteLine(game);
+}
+TestNewGame();

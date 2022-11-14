@@ -39,18 +39,18 @@ namespace GameSolver.Game
         public const int Right = 3;
 
         // Board
-        private int[,] _board;
-        private int _boardHeight;
-        private int _boardWidth;
+        public int[,] Board { get; }
+        public int BoardHeight { get; }
+        public int BoardWidth { get; }
 
         // Player
-        private IntVector2 _startPlayerTile;
-        private Direction _startPlayerDirection;
+        public IntVector2 StartPlayerTile { get; }
+        public Direction StartPlayerDirection { get; }
 
 
         // TilePosition
-        private IntVector2[] _scoreTiles;
-        private IntVector2 _goalTile;
+        public IntVector2[] ScoreTiles { get; }
+        public IntVector2 GoalTile { get; }
 
         // HashComponent
         public long[,] HashComponent { get; }
@@ -118,33 +118,30 @@ namespace GameSolver.Game
             {
                 throw new Exception("start player tile should not be null");
             }
-            
+
             if (goalTile == null)
             {
                 throw new Exception("goal tile should not be null");
             }
 
-            // Construct other element
-
-
-            _board = boardMatrix;
-            _boardHeight = height;
-            _boardWidth = width;
-            _startPlayerTile = startPlayerTile.Value;
-            _scoreTiles = scores.ToArray();
-            _goalTile = goalTile.Value;
-            _startPlayerDirection = startPlayerDirection;
+            Board = boardMatrix;
+            BoardHeight = height;
+            BoardWidth = width;
+            StartPlayerTile = startPlayerTile.Value;
+            ScoreTiles = scores.ToArray();
+            GoalTile = goalTile.Value;
+            StartPlayerDirection = startPlayerDirection;
             HashComponent = ConstructZobristHashComponent();
         }
 
         public override string ToString()
         {
             var strBuilder = new StringBuilder();
-            for (int i = 0; i < _board.GetLength(0); i++)
+            for (int i = 0; i < Board.GetLength(0); i++)
             {
-                for (int j = 0; j < _board.GetLength(1); j++)
+                for (int j = 0; j < Board.GetLength(1); j++)
                 {
-                    strBuilder.Append(TileToChar(_board[i, j]));
+                    strBuilder.Append(TileToChar(Board[i, j]));
                 }
                 strBuilder.AppendLine();
             }
@@ -208,13 +205,13 @@ namespace GameSolver.Game
 
         private int ColRowToTileIndex(int col, int row)
         {
-            return row * _boardWidth + col;
+            return row * BoardWidth + col;
         }
 
         private long[,] ConstructZobristHashComponent() 
         {
-            int boardHeight = _board.GetLength(0);
-            int boardWidth = _board.GetLength(1);
+            int boardHeight = Board.GetLength(0);
+            int boardWidth = Board.GetLength(1);
             int boardSize = boardHeight * boardWidth;
 
             var zobristTable = new long[boardSize, HashStateCount];

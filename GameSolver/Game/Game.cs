@@ -91,8 +91,6 @@ namespace GameSolver.Game
             IntVector2? startPlayerTile = null;
             IntVector2? goalTile = null;
             var scores = new List<IntVector2>();
-            var keys = new List<IntVector2>();
-            var doors = new List<IntVector2>();
             for (int i = 0; i < boardMatrix.GetLength(0); i++)
             {
                 for (int j = 0; j < boardMatrix.GetLength(1); j++)

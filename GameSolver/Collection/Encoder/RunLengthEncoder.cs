@@ -1,41 +1,40 @@
-﻿namespace GameSolver.Collection.Encoder
+﻿namespace GameSolver.Collection.Encoder;
+
+public class RunLengthEncoder
 {
-    public class RunLengthEncoder
+    public CompositeCommand EncodingCommand { get; set; }
+
+    public RunLengthEncoder(CompositeCommand compositeCommand)
     {
-        public CompositeCommand EncodingCommand { get; set; }
+        EncodingCommand = compositeCommand;
+    }
 
-        public RunLengthEncoder(CompositeCommand compositeCommand)
+    public CompositeCommand Encode()
+    {
+        var encodedCommand = new CompositeCommand
         {
-            EncodingCommand = compositeCommand;
-        }
+            Quantity = EncodingCommand.Quantity
+        };
 
-        public CompositeCommand Encode()
+        List<BaseCommand> commands = EncodingCommand.Commands;
+
+        int i = 0;
+        while (i < commands.Count)
         {
-            var encodedCommand = new CompositeCommand
+            int count = 0;
+            while (i < commands.Count - 1 && commands[i].EqualAction(commands[i + 1]))
             {
-                Quantity = EncodingCommand.Quantity
-            };
-
-            List<BaseCommand> commands = EncodingCommand.Commands;
-
-            int i = 0;
-            while (i < commands.Count)
-            {
-                int count = 0;
-                while (i < commands.Count - 1 && commands[i].EqualAction(commands[i + 1]))
-                {
-                    count += commands[i].Quantity;
-                    i++;
-                }
                 count += commands[i].Quantity;
-
-                var copyCommand = (BaseCommand)commands[i].Clone();
-                copyCommand.Quantity = count;
-                encodedCommand.AddCommand(copyCommand);
-
                 i++;
             }
-            return encodedCommand;
+            count += commands[i].Quantity;
+
+            var copyCommand = (BaseCommand)commands[i].Clone();
+            copyCommand.Quantity = count;
+            encodedCommand.AddCommand(copyCommand);
+
+            i++;
         }
+        return encodedCommand;
     }
 }

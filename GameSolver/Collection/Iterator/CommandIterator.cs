@@ -1,27 +1,24 @@
-﻿using GameSolver.Game;
+﻿namespace GameSolver.Collection.Iterator;
 
-namespace GameSolver.Collection.Iterator
+public class CommandIterator : IIterator<char>
 {
-    public class CommandIterator : IIterator<GameAction>
+    private readonly Command _command;
+    private int _currentPosition;
+
+    public CommandIterator(Command command)
     {
-        private readonly Command _command;
-        private int _currentPosition;
+        _command = command;
+        _currentPosition = 0;
+    }
 
-        public CommandIterator(Command command)
-        {
-            _command = command;
-            _currentPosition = 0;
-        }
+    public char GetNext()
+    {
+        _currentPosition++;
+        return _command.CharAction;
+    }
 
-        public GameAction GetNext()
-        {
-            _currentPosition++;
-            return _command.Action;
-        }
-
-        public bool HasMore()
-        {
-            return _currentPosition < _command.Quantity;
-        }
+    public bool HasMore()
+    {
+        return _currentPosition < _command.Quantity;
     }
 }

@@ -1,122 +1,120 @@
 ﻿using GameSolver.Collection.Iterator;
-using GameSolver.Game;
 using System.Text;
 
-namespace GameSolver.Collection
+namespace GameSolver.Collection;
+
+public class CompositeCommand : BaseCommand
 {
-    public class CompositeCommand : BaseCommand
+    public List<BaseCommand> Commands { get; init; }
+
+    public CompositeCommand(int quantity = 1)
     {
-        public List<BaseCommand> Commands { get; init; }
+        Commands = new List<BaseCommand>();
+        Quantity = quantity;
+    }
 
-        public CompositeCommand(int quantity = 1)
+    public CompositeCommand(List<BaseCommand> commands, int quantity = 1)
+    {
+        Commands = commands;
+        Quantity = quantity;
+    }
+
+    public void AddCommand(BaseCommand command)
+    {
+        Commands.Add(command);
+    }
+
+    public override string ToRegex()
+    {
+        var strBuilder = new StringBuilder();
+
+        foreach (BaseCommand c in Commands)
         {
-            Commands = new List<BaseCommand>();
-            Quantity = quantity;
+            strBuilder.Append(c.ToRegex());
         }
+        return Quantity > 1 ? $"({strBuilder}){{{Quantity}}}" : $"{strBuilder}";
+    }
 
-        public CompositeCommand(List<BaseCommand> commands, int quantity = 1)
+    public override string ToFullString()
+    {
+        var strBuilder = new StringBuilder();
+
+        for (int i = 0; i < Quantity; i++)
         {
-            Commands = commands;
-            Quantity = quantity;
-        }
-
-        public void AddCommand(BaseCommand command)
-        {
-            Commands.Add(command);
-        }
-
-        public override string ToRegex()
-        {
-            var strBuilder = new StringBuilder();
-
             foreach (BaseCommand c in Commands)
             {
-                strBuilder.Append(c.ToRegex());
+                strBuilder.Append(c.ToFullString());
             }
-            return Quantity > 1 ? $"({strBuilder}){{{Quantity}}}" : $"{strBuilder}";
         }
 
-        public override string ToFullString()
+        return strBuilder.ToString();
+    }
+
+    public override bool Equals(BaseCommand? other)
+    {
+        if (other is not CompositeCommand otherComposite)
         {
-            var strBuilder = new StringBuilder();
+            return false;
+        }
+        return otherComposite.Quantity == Quantity && EqualActionSameType(otherComposite);
+    }
 
-            for (int i = 0; i < Quantity; i++)
-            {
-                foreach (BaseCommand c in Commands)
-                {
-                    strBuilder.Append(c.ToFullString());
-                }
-            }
+    public override object Clone()
+    {
+        return new CompositeCommand
+        {
+            Commands = new List<BaseCommand>(Commands),
+            Quantity = Quantity
+        };
+    }
 
-            return strBuilder.ToString();
+    public override IIterator<char> CommandIterator()
+    {
+        return new CompositeCommandIterator(this);
+    }
+
+    public override bool EqualAction(BaseCommand? other)
+    {
+        if (other is not CompositeCommand otherComposite)
+        {
+            return false;
         }
 
-        public override bool Equals(BaseCommand? other)
+        return EqualActionSameType(otherComposite);
+    }
+
+    public CompositeCommand Skip(int n)
+    {
+        return new CompositeCommand(Commands.Skip(n).ToList(), Quantity);
+    }
+
+    public CompositeCommand Take(int n)
+    {
+        return new CompositeCommand(Commands.Take(n).ToList(), Quantity);
+    }
+
+    public override string ToString()
+    {
+        return ToRegex();
+    }
+
+    private bool EqualActionSameType(CompositeCommand otherComposite)
+    {
+        if (otherComposite.Commands.Count != Commands.Count)
         {
-            if (other is not CompositeCommand otherComposite)
-            {
-                return false;
-            }
-            return otherComposite.Quantity == Quantity && EqualActionSameType(otherComposite);
+            return false;
         }
 
-        public override object Clone()
+        bool isEqual = true;
+        for (int i = 0; i < Commands.Count; i++)
         {
-            return new CompositeCommand
-            {
-                Commands = new List<BaseCommand>(Commands),
-                Quantity = Quantity
-            };
-        }
-
-        public override IIterator<GameAction> CommandIterator()
-        {
-            return new CompositeCommandIterator(this);
-        }
-
-        public override bool EqualAction(BaseCommand? other)
-        {
-            if (other is not CompositeCommand otherComposite)
-            {
-                return false;
-            }
-
-            return EqualActionSameType(otherComposite);
-        }
-
-        public CompositeCommand Skip(int n)
-        {
-            return new CompositeCommand(Commands.Skip(n).ToList(), Quantity);
-        }
-
-        public CompositeCommand Take(int n)
-        {
-            return new CompositeCommand(Commands.Take(n).ToList(), Quantity);
-        }
-
-        public override string ToString()
-        {
-            return ToRegex();
-        }
-
-        private bool EqualActionSameType(CompositeCommand otherComposite)
-        {
-            if (otherComposite.Commands.Count != Commands.Count)
+            isEqual = isEqual && Commands[i].Equals(otherComposite.Commands[i]);
+            if (!isEqual)
             {
                 return false;
             }
-
-            bool isEqual = true;
-            for (int i = 0; i < Commands.Count; i++)
-            {
-                isEqual = isEqual && Commands[i].Equals(otherComposite.Commands[i]);
-                if (!isEqual)
-                {
-                    return false;
-                }
-            }
-
-            return isEqual;
         }
+
+        return isEqual;
     }
 }

@@ -1,57 +1,51 @@
-﻿using GameSolver.Game;
+﻿using System.ComponentModel;
 using System.Text;
+using GameSolver.Core.Action;
 
-namespace GameSolver.Collection
+namespace GameSolver.Collection;
+
+public class CommandParser
 {
-    public class CommandParser
+    public string Text { get; init; }
+
+    public CommandParser(string text)
     {
-        public string Text { get; init; }
+        Text = text;
+    }
 
-        public CommandParser(string text)
+    public CommandParser(List<IGameAction> actions)
+    {
+        var strBuilder = new StringBuilder();
+
+        foreach (IGameAction action in actions)
         {
-            Text = text;
+            strBuilder.Append(action);
         }
+            
+        Text = strBuilder.ToString();
+    }
 
-        public CommandParser(List<GameAction> actions)
+    private static Command TypeSelect(char c)
+    {
+        Command command = c switch
         {
-            var strBuilder = new StringBuilder();
+            MoveAction.ChUp => new Command(MoveAction.ChUp, 1),
+            MoveAction.ChLeft => new Command(MoveAction.ChLeft, 1),
+            MoveAction.ChRight => new Command(MoveAction.ChRight, 1),
+            MoveAction.ChDown => new Command(MoveAction.ChDown, 1),
+            _ => throw new InvalidEnumArgumentException(nameof(c), (int)c, c.GetType())
+        };
+        return command;
+    }
 
-            foreach (GameAction action in actions)
-            {
-                strBuilder.Append((char)action);
-            }
-
-            Text = strBuilder.ToString();
-        }
-
-        private static Command TypeSelect(char c)
+    public CompositeCommand Parse()
+    {
+        var compositeCommand = new CompositeCommand();
+        foreach (char c in Text)
         {
-            var action = (GameAction)c;
-            if (!Enum.IsDefined(action))
-            {
-                throw new Exception($"GameAction is not defined {(char)action}");
-            }
-
-            Command command = action switch
-            {
-                GameAction.Up => new Command(GameAction.Up, 1),
-                GameAction.Left => new Command(GameAction.Left, 1),
-                GameAction.Right => new Command(GameAction.Right, 1),
-                GameAction.Down => new Command(GameAction.Down, 1),
-                _ => throw new Exception($"cannot select any action from {(char)action}"),
-            };
-            return command;
+            Command toAddCommand = TypeSelect(c);
+            compositeCommand.AddCommand(toAddCommand);
         }
-
-        public CompositeCommand Parse()
-        {
-            var compositeCommand = new CompositeCommand();
-            foreach (char c in Text)
-            {
-                Command toAddCommand = TypeSelect(c);
-                compositeCommand.AddCommand(toAddCommand);
-            }
-            return compositeCommand;
-        }
+        return compositeCommand;
     }
 }

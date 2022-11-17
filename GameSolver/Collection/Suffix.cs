@@ -1,38 +1,37 @@
 ﻿using System.Text;
 
-namespace GameSolver.Collection
+namespace GameSolver.Collection;
+
+public class Suffix : IComparable<Suffix>
 {
-    public class Suffix : IComparable<Suffix>
+    public int Index { get; set; }
+    public CompositeCommand SuffixCommands { get; set; }
+
+    public Suffix(int index, CompositeCommand commands)
     {
-        public int Index { get; set; }
-        public CompositeCommand SuffixCommands { get; set; }
+        Index = index;
+        SuffixCommands = commands;
+    }
 
-        public Suffix(int index, CompositeCommand commands)
+    public override string ToString()
+    {
+        var strBuilder = new StringBuilder();
+
+        foreach (BaseCommand c in SuffixCommands.Commands)
         {
-            Index = index;
-            SuffixCommands = commands;
+            strBuilder.Append(c.ToFullString());
         }
 
-        public override string ToString()
+        return $"index: {Index} suffix: {strBuilder}";
+    }
+
+    public int CompareTo(Suffix? other)
+    {
+        if (other == null)
         {
-            var strBuilder = new StringBuilder();
-
-            foreach (BaseCommand c in SuffixCommands.Commands)
-            {
-                strBuilder.Append(c.ToFullString());
-            }
-
-            return $"index: {Index} suffix: {strBuilder}";
+            return 1;
         }
 
-        public int CompareTo(Suffix? other)
-        {
-            if (other == null)
-            {
-                return 1;
-            }
-
-            return SuffixCommands.CompareTo(other.SuffixCommands);
-        }
+        return SuffixCommands.CompareTo(other.SuffixCommands);
     }
 }

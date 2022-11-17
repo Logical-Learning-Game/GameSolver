@@ -21,6 +21,7 @@ public sealed class Game
 
     // Player
     public Vector2Int StartPlayerTile { get; }
+    public Direction StartPlayerDirection { get; set; }
     public int Keys { get; set; }
 
 

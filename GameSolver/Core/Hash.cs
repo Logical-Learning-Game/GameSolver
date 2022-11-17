@@ -3,12 +3,13 @@
 public static class Hash
 {
     // Hash Setting
-    public const int StateCount = 5; // PlayerDirUp, PlayerDirLeft, PlayerDirDown, PlayerDirRight, Score
+    public const int StateCount = 6; // PlayerDirUp, PlayerDirLeft, PlayerDirDown, PlayerDirRight, Score
     public const int DirUp = 0;
     public const int DirLeft = 1;
     public const int DirDown = 2;
     public const int DirRight = 3;
     public const int Score = 4;
+    public const int Key = 5;
     
     private static readonly Dictionary<Direction, int> DirToHash = new Dictionary<Direction, int>
     {

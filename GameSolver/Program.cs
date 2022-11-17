@@ -51,10 +51,18 @@ static void TestNewGame()
 		.x.x.x.xx
 		..*...*..
 		.x.x.x.x.
-		P.......G
+		Pk......G
     ";
     
     var game = new Game(boardStr, Direction.Up);
+
+    var initialState = new State(game);
+    initialState.Update(new CollectAction(MoveAction.Right, Tile.Key));
+    initialState.Update(MoveAction.Up);
+    initialState.Undo(MoveAction.Up);
+    initialState.Undo(new CollectAction(MoveAction.Right, Tile.Key));
+    PrintList(initialState.LegalGameActions());
+    Console.Write(initialState);
 
     // var bfsSolver = new BreadthFirstSearch(game);
     // List<IGameAction> result = bfsSolver.Solve();
@@ -66,14 +74,14 @@ static void TestNewGame()
     // CompositeCommand encodedCommand = new PatternEncoder(commands).Encode();
     // Console.WriteLine(encodedCommand.ToRegex());
 
-    var dfsSolver = new DepthFirstSearch(game, 16);
-    List<List<IGameAction>> results = dfsSolver.AllSolutionAtDepth();
-    
-    foreach (List<IGameAction> result in results)
-    {
-        CompositeCommand commands = new CommandParser(result).Parse();
-        CompositeCommand encoded = new PatternEncoder(commands).Encode();
-        Console.WriteLine(encoded.ToRegex());
-    }
+    // var dfsSolver = new DepthFirstSearch(game, 16);
+    // List<List<IGameAction>> results = dfsSolver.AllSolutionAtDepth();
+    //
+    // foreach (List<IGameAction> result in results)
+    // {
+    //     CompositeCommand commands = new CommandParser(result).Parse();
+    //     CompositeCommand encoded = new PatternEncoder(commands).Encode();
+    //     Console.WriteLine(encoded.ToRegex());
+    // }
 }
 TestNewGame();

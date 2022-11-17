@@ -21,11 +21,12 @@ public sealed class Game
 
     // Player
     public Vector2Int StartPlayerTile { get; }
-    public Direction StartPlayerDirection { get; }
+    public int Keys { get; set; }
 
 
     // TilePosition
     public Vector2Int[] ScoreTiles { get; }
+    public Vector2Int[] KeyTiles { get; }
     public Vector2Int GoalTile { get; }
 
     // HashComponent
@@ -67,6 +68,7 @@ public sealed class Game
         Vector2Int? startPlayerTile = null;
         Vector2Int? goalTile = null;
         var scores = new List<Vector2Int>();
+        var keys = new List<Vector2Int>();
         for (int i = 0; i < boardMatrix.GetLength(0); i++)
         {
             for (int j = 0; j < boardMatrix.GetLength(1); j++)
@@ -85,6 +87,10 @@ public sealed class Game
                 {
                     scores.Add(new Vector2Int(j, i));
                 }
+                else if ((tile & Tile.Key) > 0)
+                {
+                    keys.Add(new Vector2Int(j, i));
+                }
             }
         }
 
@@ -101,6 +107,8 @@ public sealed class Game
         Board = boardMatrix;
         StartPlayerTile = startPlayerTile.Value;
         ScoreTiles = scores.ToArray();
+        KeyTiles = keys.ToArray();
+        Keys = 0;
         GoalTile = goalTile.Value;
         StartPlayerDirection = startPlayerDirection;
         HashComponent = ConstructZobristHashComponent();

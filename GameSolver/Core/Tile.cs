@@ -7,19 +7,21 @@ public static class Tile
     public const int Floor = 1 << 1;
     public const int Wall = 1 << 2;
     public const int Score = 1 << 3;
-    public const int Goal = 1 << 4;
-    
+    public const int Key = 1 << 4;
+    public const int Goal = 1 << 5;
+
     // Tile Character
     public const char ChPlayer = 'P';
     public const char ChFloor = '.';
     public const char ChWall = 'x';
     public const char ChScore = '*';
+    public const char ChKey = 'k';
     public const char ChGoal = 'G';
-    
+
     public static char TileToChar(int tile)
     {
         char retVal = Tile.ChFloor;
-        int check = tile & (Tile.Player + Tile.Wall + Tile.Goal + Tile.Score);
+        int check = tile & (Tile.Player + Tile.Wall + Tile.Goal + Tile.Score + Tile.Key);
 
         switch (check)
         {
@@ -31,6 +33,9 @@ public static class Tile
                 break;
             case Tile.Score:
                 retVal = Tile.ChScore;
+                break;
+            case Tile.Key:
+                retVal = Tile.ChKey;
                 break;
             case Tile.Wall:
                 retVal = Tile.ChWall;
@@ -57,6 +62,9 @@ public static class Tile
                 break;
             case Tile.ChScore:
                 retVal = Tile.Score + Tile.Floor;
+                break;
+            case Tile.ChKey:
+                retVal = Tile.Key + Tile.Floor;
                 break;
             case Tile.ChWall:
                 retVal = Tile.Wall;

@@ -1,4 +1,5 @@
-﻿using GameSolver.Core.Action;
+﻿using System.ComponentModel;
+using GameSolver.Core.Action;
 
 namespace GameSolver.Core;
 
@@ -7,32 +8,38 @@ public sealed class State : ICloneable
     public Vector2Int PlayerPosition { get; set; }
     public Vector2Int GoalTile { get; } 
     public List<Vector2Int> ScoreTiles { get; }
+    public List<Vector2Int> KeyTiles { get; }
+    public int Keys { get; set; }
     public Direction PlayerDirection { get; set; }
     public int[,] Board { get; }
     public long ZobristHash { get; set; }
-    public Core.Game Game { get; }
+    public Game Game { get; }
         
-    public State(Core.Game game)
+    public State(Game game)
     {
         Board = (int[,])game.Board.Clone();
         PlayerPosition = game.StartPlayerTile;
         PlayerDirection = game.StartPlayerDirection;
         GoalTile = game.GoalTile;
         ScoreTiles = game.ScoreTiles.ToList();
+        KeyTiles = game.KeyTiles.ToList();
+        Keys = game.Keys;
         ZobristHash = CalculateZobristHash(game.HashComponent);
         Game = game;
     }
 
-    private State(Vector2Int playerPosition, Vector2Int goalTile, List<Vector2Int> scoreTiles,
-        Direction playerDirection, int[,] board, long zobristHash, Core.Game game)
+    private State(Vector2Int playerPosition, Vector2Int goalTile, List<Vector2Int> scoreTiles, List<Vector2Int> keyTiles,
+        int keys, Direction playerDirection, int[,] board, long zobristHash, Core.Game game)
     {
         PlayerPosition = playerPosition;
         GoalTile = goalTile;
-        ScoreTiles = scoreTiles ?? throw new ArgumentNullException(nameof(scoreTiles), "score tile should not be null");
+        ScoreTiles = scoreTiles ?? throw new ArgumentNullException(nameof(scoreTiles), "score tiles should not be null");
         PlayerDirection = playerDirection;
         Board = board ?? throw new ArgumentNullException(nameof(board), "board should not be null");
         ZobristHash = zobristHash;
         Game = game ?? throw new ArgumentNullException(nameof(game), "game should not be null");
+        KeyTiles = keyTiles ?? throw new ArgumentNullException(nameof(keyTiles), "key tiles should not be null");;
+        Keys = keys;
     }
 
     public bool IsSolved()
@@ -80,6 +87,8 @@ public sealed class State : ICloneable
 
         Move[] availableMoves = {Move.Up, Move.Left, Move.Down, Move.Right};
 
+        int collectTile = Tile.Score + Tile.Key;
+
         for (int i = 0; i < nextPositions.Length; i++)
         {
             Vector2Int nextPos = nextPositions[i];
@@ -87,10 +96,19 @@ public sealed class State : ICloneable
             if (CheckPassableTile(nextPos.X, nextPos.Y))
             {
                 var moveAction = new MoveAction(availableMoves[i]);
-            
-                if ((Board[nextPos.Y, nextPos.X] & Tile.Score) > 0)
+                
+                int nextTile = Board[nextPos.Y, nextPos.X];
+                int check = nextTile & collectTile;
+                
+                if (check > 0)
                 {
-                    IGameAction action = new CollectAction(moveAction, Tile.Score);
+                    IGameAction action = check switch
+                    {
+                        Tile.Score => new CollectAction(moveAction, Tile.Score),
+                        Tile.Key => new CollectAction(moveAction, Tile.Key),
+                        _ => throw new InvalidEnumArgumentException(nameof(check), check, check.GetType())
+                    };
+                    
                     legalActions.Add(action);
                 }
                 else
@@ -105,14 +123,15 @@ public sealed class State : ICloneable
     
     public override string ToString()
     {
-        return Core.Game.BoardToString(Board);
+        return Game.BoardToString(Board);
     }
 
     public object Clone()
     {
         var copyScoreTiles = new List<Vector2Int>(ScoreTiles);
+        var copyKeyTiles = new List<Vector2Int>(KeyTiles);
         var copyBoard = (int[,])Board.Clone();
-        return new State(PlayerPosition, GoalTile, copyScoreTiles, PlayerDirection, copyBoard, ZobristHash, Game);
+        return new State(PlayerPosition, GoalTile, copyScoreTiles, copyKeyTiles, Keys, PlayerDirection, copyBoard, ZobristHash, Game);
     }
 
     private long CalculateZobristHash(long[,] hashComponent)
@@ -124,6 +143,12 @@ public sealed class State : ICloneable
         {
             int score1DPos = boardWidth * tile.Y + tile.X;
             hash ^= hashComponent[score1DPos, Hash.Score];
+        }
+
+        foreach (Vector2Int tile in KeyTiles)
+        {
+            int key1DPos = boardWidth * tile.Y + tile.X;
+            hash ^= hashComponent[key1DPos, Hash.Key];
         }
 
         Vector2Int playerPos = PlayerPosition;

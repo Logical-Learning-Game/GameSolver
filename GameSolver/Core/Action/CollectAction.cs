@@ -1,4 +1,6 @@
-﻿namespace GameSolver.Core.Action;
+﻿using System.ComponentModel;
+
+namespace GameSolver.Core.Action;
 
 public class CollectAction : IGameAction
 {
@@ -44,8 +46,13 @@ public class CollectAction : IGameAction
                 hashIndex = Hash.Score;
                 state.ScoreTiles.RemoveAll(v => v.X == playerPos.X && v.Y == playerPos.Y);
                 break;
+            case Tile.Key:
+                hashIndex = Hash.Key;
+                state.Keys++;
+                state.KeyTiles.RemoveAll(v => v.X == playerPos.X && v.Y == playerPos.Y);
+                break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(tile), tile, $"tile value {tile} is invalid");
+                throw new InvalidEnumArgumentException(nameof(tile), tile, tile.GetType());
         }
         
         int boardWidth = state.Board.GetLength(1);
@@ -66,8 +73,13 @@ public class CollectAction : IGameAction
                 hashIndex = Hash.Score;
                 state.ScoreTiles.Add(playerPos);
                 break;
+            case Tile.Key:
+                hashIndex = Hash.Key;
+                state.Keys--;
+                state.KeyTiles.Add(playerPos);
+                break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(tile), tile, $"tile value {tile} is invalid");
+                throw new InvalidEnumArgumentException(nameof(tile), tile, tile.GetType());
         }
         
         int boardWidth = state.Board.GetLength(1);

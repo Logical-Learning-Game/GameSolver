@@ -34,7 +34,7 @@ public class CollectAction : IGameAction
         Vector2Int playerPos = state.PlayerPosition;
         int currentTile = state.Board[playerPos.Y, playerPos.X];
 
-        if ((currentTile & tile) <= 0)
+        if ((currentTile & tile) == 0)
         {
             throw new ArgumentException($"provided tile not found on current player's tile", nameof(tile));
         }

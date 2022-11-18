@@ -57,7 +57,7 @@ public class CollectAction : IGameAction
         
         int boardWidth = state.Board.GetLength(1);
         
-        int tile1dPos = Core.Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
+        int tile1dPos = Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
         state.Board[playerPos.Y, playerPos.X] &= ~tile;
         state.ZobristHash ^= state.Game.HashComponent[tile1dPos, hashIndex];
     }
@@ -84,7 +84,7 @@ public class CollectAction : IGameAction
         
         int boardWidth = state.Board.GetLength(1);
 
-        int tile1DPos = Core.Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
+        int tile1DPos = Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
         state.Board[playerPos.Y, playerPos.X] |= tile;
         state.ZobristHash ^= state.Game.HashComponent[tile1DPos, hashIndex];
     }

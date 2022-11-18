@@ -84,8 +84,8 @@ public class MoveAction : IGameAction
         };
 
         int boardWidth = state.Board.GetLength(1);
-        int start1DPos = Core.Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
-        int end1DPos = Core.Game.ColRowToTileIndex(prevPos.Y, prevPos.X, boardWidth);
+        int start1DPos = Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
+        int end1DPos = Game.ColRowToTileIndex(prevPos.Y, prevPos.X, boardWidth);
         
         state.Board[playerPos.Y, playerPos.X] &= ~Tile.Player;
         int hashIndex = Hash.DirectionToHashIndex(state.PlayerDirection);

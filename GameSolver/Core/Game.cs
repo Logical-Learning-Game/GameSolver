@@ -28,6 +28,7 @@ public sealed class Game
     // TilePosition
     public Vector2Int[] ScoreTiles { get; }
     public Vector2Int[] KeyTiles { get; }
+    public Vector2Int[] DoorTiles { get; }
     public Vector2Int GoalTile { get; }
 
     // HashComponent
@@ -56,7 +57,33 @@ public sealed class Game
                 if (j < trimmedBoardList[i].Length)
                 {
                     char tileChar = trimmedBoardList[i][j];
-                    boardMatrix[i, j] = Tile.CharToTile(tileChar);
+
+                    if (Tile.IsDoorLink(tileChar))
+                    {
+                        switch (tileChar)
+                        {
+                            case Tile.ChDoorLinkUp:
+                                boardMatrix[i, j] |= Tile.DoorUp + Tile.Floor;
+                                boardMatrix[i - 1, j] |= Tile.DoorDown + Tile.Floor;
+                                break;
+                            case Tile.ChDoorLinkLeft:
+                                boardMatrix[i, j] |= Tile.DoorLeft + Tile.Floor;
+                                boardMatrix[i, j - 1] |= Tile.DoorRight + Tile.Floor;
+                                break;
+                            case Tile.ChDoorLinkDown:
+                                boardMatrix[i, j] |= Tile.DoorDown + Tile.Floor;
+                                boardMatrix[i + 1, j] |= Tile.DoorUp + Tile.Floor;
+                                break;
+                            case Tile.ChDoorLinkRight:
+                                boardMatrix[i, j] |= Tile.DoorRight + Tile.Floor;
+                                boardMatrix[i, j + 1] |= Tile.DoorLeft + Tile.Floor;
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        boardMatrix[i, j] |= Tile.CharToTile(tileChar);
+                    }
                 }
                 else
                 {
@@ -70,6 +97,7 @@ public sealed class Game
         Vector2Int? goalTile = null;
         var scores = new List<Vector2Int>();
         var keys = new List<Vector2Int>();
+        var doors = new List<Vector2Int>();
         for (int i = 0; i < boardMatrix.GetLength(0); i++)
         {
             for (int j = 0; j < boardMatrix.GetLength(1); j++)
@@ -92,6 +120,10 @@ public sealed class Game
                 {
                     keys.Add(new Vector2Int(j, i));
                 }
+                else if ((tile & (Tile.DoorUp + Tile.DoorLeft + Tile.DoorDown + Tile.DoorRight)) > 0)
+                {
+                    doors.Add(new Vector2Int(j, i));
+                }
             }
         }
 
@@ -110,6 +142,7 @@ public sealed class Game
         ScoreTiles = scores.ToArray();
         KeyTiles = keys.ToArray();
         Keys = 0;
+        DoorTiles = doors.ToArray();
         GoalTile = goalTile.Value;
         StartPlayerDirection = startPlayerDirection;
         HashComponent = ConstructZobristHashComponent();

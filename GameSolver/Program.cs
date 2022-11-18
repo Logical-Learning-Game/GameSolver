@@ -47,41 +47,50 @@ static void TestNewGame()
     Console.WriteLine("Test new game");
 
     const string boardStr = @"
+        k...*..xx
+		.x.x.x.xx
+		..*...*.d
+		.x.x.x.x.
+		P.....r.G
+    ";
+
+    var game = new Game(boardStr, Direction.Up);
+    var initialState = new State(game);
+    Console.WriteLine(initialState);
+
+    var bfsSolver = new BreadthFirstSearch(game);
+    List<IGameAction> result = bfsSolver.Solve();
+    Console.WriteLine("result:");
+    PrintList(result);
+
+    Console.WriteLine();
+}
+TestNewGame();
+
+
+
+static void TestAllSolution()
+{
+    Console.WriteLine("Test all solution");
+
+    const string boardStr = @"
         ....*..xx
 		.x.x.x.xx
 		..*...*..
 		.x.x.x.x.
-		Pk......G
+		P.......G
     ";
-    
+
     var game = new Game(boardStr, Direction.Up);
 
-    var initialState = new State(game);
-    initialState.Update(new CollectAction(MoveAction.Right, Tile.Key));
-    initialState.Update(MoveAction.Up);
-    initialState.Undo(MoveAction.Up);
-    initialState.Undo(new CollectAction(MoveAction.Right, Tile.Key));
-    PrintList(initialState.LegalGameActions());
-    Console.Write(initialState);
+    var dfsSolver = new DepthFirstSearch(game, 16);
+    List<List<IGameAction>> results = dfsSolver.AllSolutionAtDepth();
 
-    // var bfsSolver = new BreadthFirstSearch(game);
-    // List<IGameAction> result = bfsSolver.Solve();
-
-    // var dfsSolver = new DepthFirstSearch(game, 16);
-    // List<IGameAction> result = dfsSolver.Solve();
-
-    // CompositeCommand commands = new CommandParser(result).Parse();
-    // CompositeCommand encodedCommand = new PatternEncoder(commands).Encode();
-    // Console.WriteLine(encodedCommand.ToRegex());
-
-    // var dfsSolver = new DepthFirstSearch(game, 16);
-    // List<List<IGameAction>> results = dfsSolver.AllSolutionAtDepth();
-    //
-    // foreach (List<IGameAction> result in results)
-    // {
-    //     CompositeCommand commands = new CommandParser(result).Parse();
-    //     CompositeCommand encoded = new PatternEncoder(commands).Encode();
-    //     Console.WriteLine(encoded.ToRegex());
-    // }
+    for (int i = 0; i < results.Count; i++)
+    {
+        CompositeCommand commands = new CommandParser(results[i]).Parse();
+        CompositeCommand encoded = new PatternEncoder(commands).Encode();
+        Console.WriteLine($"{i + 1}: {encoded.ToRegex()} ---- BlockCount {encoded.Commands.Count}");
+    }
 }
-TestNewGame();
+//TestAllSolution();

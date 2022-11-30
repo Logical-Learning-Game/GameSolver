@@ -1,4 +1,6 @@
-﻿namespace GameSolver.Core.Action;
+﻿using System.ComponentModel;
+
+namespace GameSolver.Core.Action;
 
 public class CollectAction : IGameAction
 {
@@ -32,7 +34,7 @@ public class CollectAction : IGameAction
         Vector2Int playerPos = state.PlayerPosition;
         int currentTile = state.Board[playerPos.Y, playerPos.X];
 
-        if ((currentTile & tile) <= 0)
+        if ((currentTile & tile) == 0)
         {
             throw new ArgumentException($"provided tile not found on current player's tile", nameof(tile));
         }
@@ -44,13 +46,18 @@ public class CollectAction : IGameAction
                 hashIndex = Hash.Score;
                 state.ScoreTiles.RemoveAll(v => v.X == playerPos.X && v.Y == playerPos.Y);
                 break;
+            case Tile.Key:
+                hashIndex = Hash.Key;
+                state.Keys++;
+                state.KeyTiles.RemoveAll(v => v.X == playerPos.X && v.Y == playerPos.Y);
+                break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(tile), tile, $"tile value {tile} is invalid");
+                throw new InvalidEnumArgumentException(nameof(tile), tile, tile.GetType());
         }
         
         int boardWidth = state.Board.GetLength(1);
         
-        int tile1dPos = Core.Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
+        int tile1dPos = Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
         state.Board[playerPos.Y, playerPos.X] &= ~tile;
         state.ZobristHash ^= state.Game.HashComponent[tile1dPos, hashIndex];
     }
@@ -66,13 +73,18 @@ public class CollectAction : IGameAction
                 hashIndex = Hash.Score;
                 state.ScoreTiles.Add(playerPos);
                 break;
+            case Tile.Key:
+                hashIndex = Hash.Key;
+                state.Keys--;
+                state.KeyTiles.Add(playerPos);
+                break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(tile), tile, $"tile value {tile} is invalid");
+                throw new InvalidEnumArgumentException(nameof(tile), tile, tile.GetType());
         }
         
         int boardWidth = state.Board.GetLength(1);
 
-        int tile1DPos = Core.Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
+        int tile1DPos = Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
         state.Board[playerPos.Y, playerPos.X] |= tile;
         state.ZobristHash ^= state.Game.HashComponent[tile1DPos, hashIndex];
     }

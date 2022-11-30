@@ -14,11 +14,11 @@ public class MoveAction : IGameAction
     public const char ChDown = 'd';
     public const char ChRight = 'r';
     
-    private readonly Move _move;
+    public Move ToMove { get; }
 
-    public MoveAction(Move move)
+    public MoveAction(Move toMove)
     {
-        _move = move;
+        ToMove = toMove;
     }
 
     static MoveAction()
@@ -36,7 +36,7 @@ public class MoveAction : IGameAction
         Direction nextDir = state.PlayerDirection;
         long[,] hashComponent = state.Game.HashComponent;
 
-        nextDir = _move switch
+        nextDir = ToMove switch
         {
             Move.Left => DirectionUtility.RotateLeft(state.PlayerDirection),
             Move.Down => DirectionUtility.RotateBack(state.PlayerDirection),
@@ -75,7 +75,7 @@ public class MoveAction : IGameAction
         prevPos.X -= currentDir.X;
         prevPos.Y -= currentDir.Y;
 
-        prevDir = _move switch
+        prevDir = ToMove switch
         {
             Move.Left => DirectionUtility.RotateRight(state.PlayerDirection),
             Move.Down => DirectionUtility.RotateBack(state.PlayerDirection),
@@ -84,8 +84,8 @@ public class MoveAction : IGameAction
         };
 
         int boardWidth = state.Board.GetLength(1);
-        int start1DPos = Core.Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
-        int end1DPos = Core.Game.ColRowToTileIndex(prevPos.Y, prevPos.X, boardWidth);
+        int start1DPos = Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
+        int end1DPos = Game.ColRowToTileIndex(prevPos.Y, prevPos.X, boardWidth);
         
         state.Board[playerPos.Y, playerPos.X] &= ~Tile.Player;
         int hashIndex = Hash.DirectionToHashIndex(state.PlayerDirection);
@@ -101,13 +101,13 @@ public class MoveAction : IGameAction
 
     public override string ToString()
     {
-        char ch = _move switch
+        char ch = ToMove switch
         {
             Move.Up => ChUp,
             Move.Left => ChLeft,
             Move.Down => ChDown,
             Move.Right => ChRight,
-            _ => throw new InvalidEnumArgumentException(nameof(_move), (int)_move, _move.GetType())
+            _ => throw new InvalidEnumArgumentException(nameof(ToMove), (int)ToMove, ToMove.GetType())
         };
         return ch.ToString();
     }

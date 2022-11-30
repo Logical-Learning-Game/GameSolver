@@ -98,54 +98,47 @@ public sealed class State : ICloneable
         };
 
         int collectTile = Tile.Score + Tile.Key;
-
-        var doorTileChecks = new Tuple<int, int>[4];
-        for (int i = 0; i < playerDirections.Length; i++)
-        {
-            Direction playerDir = playerDirections[i];
-            doorTileChecks[i] = playerDir switch
-            {
-                Direction.Up => new Tuple<int, int>(Tile.DoorDown, Tile.DoorDownOpen),
-                Direction.Left => new Tuple<int, int>(Tile.DoorRight, Tile.DoorRightOpen),
-                Direction.Down => new Tuple<int, int>(Tile.DoorUp, Tile.DoorUpOpen),
-                Direction.Right => new Tuple<int, int>(Tile.DoorLeft, Tile.DoorLeftOpen),
-                _ => throw new InvalidEnumArgumentException(nameof(playerDir), (int)playerDir, playerDir.GetType())
-            };
-        }
-
+        
         for (int i = 0; i < nextPositions.Length; i++)
         {
             Vector2Int nextPos = nextPositions[i];
-            
-            if (CheckPassableTile(nextPos.X, nextPos.Y, playerDirections[i]))
-            {
-                var moveAction = new MoveAction(availableMoves[i]);
-                
-                int nextTile = Board[nextPos.Y, nextPos.X];
-                int collectTileCheck = nextTile & collectTile;
-                int doorTileCheck = nextTile & doorTileChecks[i].Item1;
-                int doorOpenCheck = nextTile & doorTileChecks[i].Item2;
 
-                if (collectTileCheck > 0)
+            bool canPassTile = CheckPassableTile(nextPos.X, nextPos.Y);
+            if (!canPassTile)
+            {
+                continue;
+            }
+            
+            bool isDoor = IsDoor(nextPos.X, nextPos.Y, playerDirections[i], out bool doorOpen);
+            if (isDoor && !doorOpen && Keys == 0)
+            {
+                continue;
+            }
+            
+            var moveAction = new MoveAction(availableMoves[i]);
+            
+            int nextTile = Board[nextPos.Y, nextPos.X];
+            int collectTileCheck = nextTile & collectTile;
+
+            if (collectTileCheck > 0)
+            {
+                IGameAction action = collectTileCheck switch
                 {
-                    IGameAction action = collectTileCheck switch
-                    {
-                        Tile.Score => new CollectAction(moveAction, Tile.Score),
-                        Tile.Key => new CollectAction(moveAction, Tile.Key),
-                        _ => throw new InvalidEnumArgumentException(nameof(collectTileCheck), collectTileCheck, collectTileCheck.GetType())
-                    };
-                    
-                    legalActions.Add(action);
-                }
-                else if (doorTileCheck > 0 && doorOpenCheck == 0 && Keys > 0)
-                {
-                    IGameAction action = new OpenDoorAction(moveAction);
-                    legalActions.Add(action);
-                }
-                else
-                {
-                    legalActions.Add(moveAction);
-                }
+                    Tile.Score => new CollectAction(moveAction, Tile.Score),
+                    Tile.Key => new CollectAction(moveAction, Tile.Key),
+                    _ => throw new InvalidEnumArgumentException(nameof(collectTileCheck), collectTileCheck, collectTileCheck.GetType())
+                };
+                
+                legalActions.Add(action);
+            }
+            else if (isDoor && !doorOpen && Keys > 0)
+            {
+                IGameAction action = new OpenDoorAction(moveAction);
+                legalActions.Add(action);
+            }
+            else
+            {
+                legalActions.Add(moveAction);
             }
         }
         
@@ -202,17 +195,8 @@ public sealed class State : ICloneable
         return hash;
     }
 
-    private bool CheckPassableTile(int x, int y, Direction inboundDirection)
+    private bool IsDoor(int x, int y, Direction inboundDirection, out bool doorOpen)
     {
-        int height = Board.GetLength(0);
-        int width = Board.GetLength(1);
-
-        // Out of bound check
-        if (y < 0 || x < 0 || y > height - 1 || x > width - 1)
-        {
-            return false;
-        }
-
         Tuple<int, int> doorDirToBlock = inboundDirection switch
         {
             Direction.Up => new Tuple<int, int>(Tile.DoorDown, Tile.DoorDownOpen),
@@ -224,22 +208,34 @@ public sealed class State : ICloneable
 
         int dirToBlock = doorDirToBlock.Item1;
         int isOpen = doorDirToBlock.Item2;
-        
+
+        int currentTile = Board[y, x];
+        bool isDoor = (currentTile & dirToBlock) > 0;
+
+        doorOpen = false;
+        if (isDoor)
+        {
+            doorOpen = (currentTile & isOpen) > 0;
+        }
+
+        return isDoor;
+    }
+    
+    private bool CheckPassableTile(int x, int y)
+    {
+        int height = Board.GetLength(0);
+        int width = Board.GetLength(1);
+
+        // Out of bound check
+        if (y < 0 || x < 0 || y > height - 1 || x > width - 1)
+        {
+            return false;
+        }
+
         int unPassableTile = Tile.Wall + Tile.Goal;
         
         int currentTile = Board[y, x];
         int check = currentTile & unPassableTile;
-        
-        // Door ahead
-        if ((currentTile & dirToBlock) > 0)
-        {
-            if ((currentTile & isOpen) > 0)
-            {
-                return ScoreTiles.Count == 0;
-            }
-
-            return Keys > 0 && ScoreTiles.Count == 0;
-        }
 
         if (ScoreTiles.Count == 0)
         {

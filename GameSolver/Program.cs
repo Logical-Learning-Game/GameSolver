@@ -9,7 +9,7 @@ using GameSolver.Solver;
 
 static void PrintList<T>(IEnumerable<T> list)
 {
-    string s = string.Join(" ", list);
+    string s = string.Join("", list);
     Console.WriteLine(s);
 }
 

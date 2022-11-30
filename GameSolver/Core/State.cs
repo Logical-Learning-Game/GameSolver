@@ -82,10 +82,10 @@ public sealed class State : ICloneable
 
         Vector2Int[] nextPositions =
         {
-            new Vector2Int(x + dx, y + dy),
-            new Vector2Int(x + dy, y - dx),
-            new Vector2Int(x - dx, y - dy),
-            new Vector2Int(x - dy, y + dx)
+            new(x + dx, y + dy),
+            new(x + dy, y - dx),
+            new(x - dx, y - dy),
+            new(x - dy, y + dx)
         };
 
         Move[] availableMoves = {Move.Up, Move.Left, Move.Down, Move.Right};

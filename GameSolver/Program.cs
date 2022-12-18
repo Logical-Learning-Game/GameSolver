@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using GameSolver.Benchmark;
 using GameSolver.Collection;
 using GameSolver.Collection.Encoder;
 using GameSolver.Core;
@@ -92,3 +93,7 @@ static void TestAllSolution()
     }
 }
 //TestAllSolution();
+
+
+var bench = new SolverBenchmark(10);
+bench.Run();

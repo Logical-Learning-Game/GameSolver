@@ -5,16 +5,10 @@ namespace GameSolver.Solver;
 
 public sealed class DepthFirstSearchData
 {
-    public int MaxDepth { get; set; }
-    public bool Solved { get; set; }
-    public int SolutionDepth { get; set; }
     public IGameAction[] Actions { get; }
 
-    public DepthFirstSearchData(int maxDepth, bool solved, int solutionDepth, IGameAction[] actions)
+    public DepthFirstSearchData(IGameAction[] actions)
     {
-        MaxDepth = maxDepth;
-        Solved = solved;
-        SolutionDepth = solutionDepth;
         Actions = actions;
     }
 }
@@ -30,8 +24,9 @@ public sealed class DepthFirstSearch : ISolver
         _limit = limit;
     }
 
+    public List<IGameAction> SolveBacktrackingStrategy()
     {
-        var data = new DepthFirstSearchData(0, false, 0, new IGameAction[_limit]);
+        var data = new DepthFirstSearchData(new IGameAction[_limit]);
         var initialState = new State(_game);
         SolveRecursive(initialState, ref data, 0);
         return data.Actions.ToList();
@@ -49,12 +44,9 @@ public sealed class DepthFirstSearch : ISolver
 
     private bool SolveRecursive(State state, ref DepthFirstSearchData data, int depth)
     {
-        data.MaxDepth = Math.Max(data.MaxDepth, depth);
 
         if (state.IsSolved())
         {
-            data.Solved = true;
-            data.SolutionDepth = depth;
             return true;
         }
 

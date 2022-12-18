@@ -32,8 +32,8 @@ public sealed class DepthFirstSearch : ISolver
         return data.Actions.ToList();
     }
 
-    public List<List<IGameAction>> AllSolutionAtDepth()
     public IEnumerable<IGameAction> Solve()
+    public List<List<IGameAction>> SolveAllSolutionStrategy()
     { 
         var initialState = new State(_game);
         var results = new List<List<IGameAction>>();

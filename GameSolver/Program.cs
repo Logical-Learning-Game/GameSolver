@@ -5,13 +5,8 @@ using GameSolver.Collection.Encoder;
 using GameSolver.Core;
 using GameSolver.Core.Action;
 using GameSolver.Solver;
+using GameSolver.Utility;
 
-
-static void PrintList<T>(IEnumerable<T> list)
-{
-    string s = string.Join("", list);
-    Console.WriteLine(s);
-}
 
 static void TestPatternEncoder()
 {
@@ -60,9 +55,12 @@ static void TestNewGame()
 
     var bfsSolver = new BreadthFirstSearch(game);
     List<IGameAction> result = bfsSolver.Solve();
+    var gameActions = result.ToList();
     Console.WriteLine("result:");
     PrintList(result);
 
+    Utility.PrintList(gameActions);
+    Console.WriteLine(gameActions.Count);
     Console.WriteLine();
 }
 TestNewGame();

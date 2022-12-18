@@ -68,7 +68,7 @@ public sealed class DepthFirstSearch : ISolver
         return SolveDefaultStrategy();
     }
 
-    public IEnumerable<IGameAction> SolveDefaultStrategy()
+    public ICollection<IGameAction> SolveDefaultStrategy()
     {
         var frontier = new Stack<StateData>();
         var initialState = new State(_game);

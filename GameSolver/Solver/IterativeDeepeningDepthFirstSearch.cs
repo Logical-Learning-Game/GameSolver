@@ -1,4 +1,5 @@
-﻿using GameSolver.Core;
+﻿using System.Collections;
+using GameSolver.Core;
 using GameSolver.Core.Action;
 
 namespace GameSolver.Solver;
@@ -19,7 +20,7 @@ public sealed class IterativeDeepeningDepthFirstSearch : ISolver
         while (true)
         {
             var dfsSolver = new DepthFirstSearch(_game, depth);
-            List<IGameAction> solution = dfsSolver.SolveDefaultStrategy();
+            ICollection<IGameAction> solution = dfsSolver.SolveDefaultStrategy();
 
             if (solution.Count > 0)
             {

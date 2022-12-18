@@ -15,7 +15,7 @@ public sealed class BreadthFirstSearchData
     }
 }
 
-public sealed class BreadthFirstSearch
+public sealed class BreadthFirstSearch : ISolver
 {
     private readonly Game _game;
 
@@ -24,7 +24,7 @@ public sealed class BreadthFirstSearch
         _game = game;
     }
 
-    public List<IGameAction> Solve()
+    public IEnumerable<IGameAction> Solve()
     {
         var initialState = new State(_game);
         var queue = new Queue<BreadthFirstSearchData>();

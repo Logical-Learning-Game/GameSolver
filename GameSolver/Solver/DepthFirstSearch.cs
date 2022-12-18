@@ -19,7 +19,7 @@ public sealed class DepthFirstSearchData
     }
 }
 
-public sealed class DepthFirstSearch
+public sealed class DepthFirstSearch : ISolver
 {
     private readonly Game _game;
     private readonly int _limit;
@@ -30,7 +30,6 @@ public sealed class DepthFirstSearch
         _limit = limit;
     }
 
-    public List<IGameAction> Solve()
     {
         var data = new DepthFirstSearchData(0, false, 0, new IGameAction[_limit]);
         var initialState = new State(_game);
@@ -39,6 +38,7 @@ public sealed class DepthFirstSearch
     }
 
     public List<List<IGameAction>> AllSolutionAtDepth()
+    public IEnumerable<IGameAction> Solve()
     { 
         var initialState = new State(_game);
         var results = new List<List<IGameAction>>();

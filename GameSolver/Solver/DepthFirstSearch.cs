@@ -13,6 +13,37 @@ public sealed class DepthFirstSearchData
     }
 }
 
+public sealed class StateData
+{
+    public IGameAction? Action { get; }
+    public StateData? PrevState { get; }
+    public State State { get; }
+    public int Depth { get; }
+
+    public StateData(IGameAction? action, State currentState, StateData? prevStateData, int depth)
+    {
+        Action = action;
+        PrevState = prevStateData;
+        State = currentState;
+        Depth = depth;
+    }
+
+    public List<IGameAction> Solution()
+    {
+        var solution = new List<IGameAction>();
+
+        StateData currentState = this;
+        while (currentState.PrevState != null)
+        {
+            solution.Add(currentState.Action!);
+            currentState = currentState.PrevState;
+        }
+
+        solution.Reverse();
+        return solution;
+    }
+}
+
 public sealed class DepthFirstSearch : ISolver
 {
     private readonly Game _game;
@@ -33,6 +64,46 @@ public sealed class DepthFirstSearch : ISolver
     }
 
     public IEnumerable<IGameAction> Solve()
+    {
+        return SolveDefaultStrategy();
+    }
+
+    public IEnumerable<IGameAction> SolveDefaultStrategy()
+    {
+        var frontier = new Stack<StateData>();
+        var initialState = new State(_game);
+        var initialStateData = new StateData(null, initialState, null, 0);
+        frontier.Push(initialStateData);
+
+        while (frontier.Count > 0)
+        {
+            StateData visitState = frontier.Pop();
+
+            if (visitState.State.IsSolved())
+            {
+                return visitState.Solution();
+            }
+
+            if (visitState.Depth >= _limit)
+            {
+                continue;
+            }
+
+            if (!IsCycle(visitState))
+            {
+                foreach (IGameAction action in visitState.State.LegalGameActions())
+                {
+                    State childState = State.Update(visitState.State, action);
+            
+                    var childStateData = new StateData(action, childState, visitState, visitState.Depth + 1);
+                    frontier.Push(childStateData);
+                }
+            }
+        }
+
+        return new List<IGameAction>();
+    }
+    
     public List<List<IGameAction>> SolveAllSolutionStrategy()
     { 
         var initialState = new State(_game);
@@ -42,9 +113,25 @@ public sealed class DepthFirstSearch : ISolver
         return results;
     }
 
+    private bool IsCycle(StateData stateData)
+    {
+        State state = stateData.State;
+        StateData currentStateData = stateData;
+        while (currentStateData.PrevState != null)
+        {
+            if (state.ZobristHash == currentStateData.PrevState.State.ZobristHash)
+            {
+                return true;
+            }
+
+            currentStateData = currentStateData.PrevState;
+        }
+
+        return false;
+    }
+    
     private bool SolveRecursive(State state, ref DepthFirstSearchData data, int depth)
     {
-
         if (state.IsSolved())
         {
             return true;

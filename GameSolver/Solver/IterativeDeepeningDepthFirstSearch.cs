@@ -13,14 +13,14 @@ public sealed class IterativeDeepeningDepthFirstSearch : ISolver
         _game = game;
     }
 
-    public IEnumerable<IGameAction> Solve()
+    public IReadOnlyList<IGameAction> Solve()
     {
         int depth = 0;
 
         while (true)
         {
             var dfsSolver = new DepthFirstSearch(_game, depth);
-            ICollection<IGameAction> solution = dfsSolver.SolveDefaultStrategy();
+            IReadOnlyList<IGameAction> solution = dfsSolver.SolveDefaultStrategy();
 
             if (solution.Count > 0)
             {

@@ -6,9 +6,9 @@ namespace GameSolver.Solver;
 public sealed class BreadthFirstSearchData
 {
     public State State { get; }
-    public List<IGameAction> Actions { get; }
+    public IList<IGameAction> Actions { get; }
 
-    public BreadthFirstSearchData(State state, List<IGameAction> actions)
+    public BreadthFirstSearchData(State state, IList<IGameAction> actions)
     {
         State = state;
         Actions = actions;
@@ -30,7 +30,7 @@ public sealed class BFSStateData
         Depth = depth;
     }
     
-    public List<IGameAction> Solution()
+    public IReadOnlyList<IGameAction> Solution()
     {
         var solution = new List<IGameAction>();
 
@@ -55,7 +55,7 @@ public sealed class BreadthFirstSearch : ISolver
         _game = game;
     }
 
-    public IEnumerable<IGameAction> Solve()
+    public IReadOnlyList<IGameAction> Solve()
     {
         var initialState = new State(_game);
         var frontier = new Queue<BFSStateData>();
@@ -97,9 +97,9 @@ public sealed class BreadthFirstSearch : ISolver
         return new List<IGameAction>();
     }
 
-    public List<List<IGameAction>> AllSolutionAtDepth(int depth)
+    public IReadOnlyList<IReadOnlyList<IGameAction>> AllSolutionAtDepth(int depth)
     {
-        var allSolutions = new List<List<IGameAction>>();
+        var allSolutions = new List<IReadOnlyList<IGameAction>>();
         
         var initialState = new State(_game);
         var frontier = new Queue<BFSStateData>();
@@ -141,7 +141,7 @@ public sealed class BreadthFirstSearch : ISolver
             }
         }
 
-        return new List<List<IGameAction>>();
+        return new List<IReadOnlyList<IGameAction>>();
     }
     
     private static bool IsCycle(BFSStateData stateData)

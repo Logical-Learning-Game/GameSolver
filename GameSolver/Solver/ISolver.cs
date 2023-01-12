@@ -4,5 +4,5 @@ namespace GameSolver.Solver;
 
 public interface ISolver
 {
-    IEnumerable<IGameAction> Solve();
+    IReadOnlyList<IGameAction> Solve();
 }

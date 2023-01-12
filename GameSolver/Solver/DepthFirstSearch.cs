@@ -5,9 +5,9 @@ namespace GameSolver.Solver;
 
 public sealed class DepthFirstSearchData
 {
-    public IGameAction[] Actions { get; }
+    public IList<IGameAction> Actions { get; }
 
-    public DepthFirstSearchData(IGameAction[] actions)
+    public DepthFirstSearchData(IList<IGameAction> actions)
     {
         Actions = actions;
     }
@@ -28,7 +28,7 @@ public sealed class StateData
         Depth = depth;
     }
 
-    public List<IGameAction> Solution()
+    public IReadOnlyList<IGameAction> Solution()
     {
         var solution = new List<IGameAction>();
 
@@ -55,7 +55,7 @@ public sealed class DepthFirstSearch : ISolver
         _limit = limit;
     }
 
-    public List<IGameAction> SolveBacktrackingStrategy()
+    public IReadOnlyList<IGameAction> SolveBacktrackingStrategy()
     {
         var data = new DepthFirstSearchData(new IGameAction[_limit]);
         var initialState = new State(_game);
@@ -63,12 +63,12 @@ public sealed class DepthFirstSearch : ISolver
         return data.Actions.ToList();
     }
 
-    public IEnumerable<IGameAction> Solve()
+    public IReadOnlyList<IGameAction> Solve()
     {
         return SolveDefaultStrategy();
     }
 
-    public ICollection<IGameAction> SolveDefaultStrategy()
+    public IReadOnlyList<IGameAction> SolveDefaultStrategy()
     {
         var frontier = new Stack<StateData>();
         var initialState = new State(_game);
@@ -100,17 +100,17 @@ public sealed class DepthFirstSearch : ISolver
                 }
             }
         }
-
+        
         return new List<IGameAction>();
     }
     
-    public List<List<IGameAction>> SolveAllSolutionStrategy()
-    { 
+    public IReadOnlyList<IReadOnlyList<IGameAction>> SolveAllSolutionStrategy()
+    {
         var initialState = new State(_game);
-        var results = new List<List<IGameAction>>();
-        var actions = new List<IGameAction>();
+        ICollection<IReadOnlyList<IGameAction>> results = new List<IReadOnlyList<IGameAction>>();
+        IList<IGameAction> actions = new List<IGameAction>();
         AllSolutionAtDepthRecursive(initialState, ref actions, ref results, 0);
-        return results;
+        return (IReadOnlyList<IReadOnlyList<IGameAction>>)results;
     }
 
     private bool IsCycle(StateData stateData)
@@ -156,7 +156,7 @@ public sealed class DepthFirstSearch : ISolver
         return false;
     }
 
-    private void AllSolutionAtDepthRecursive(State state, ref List<IGameAction> actions, ref List<List<IGameAction>> results, int depth)
+    private void AllSolutionAtDepthRecursive(State state, ref IList<IGameAction> actions, ref ICollection<IReadOnlyList<IGameAction>> results, int depth)
     {
         if (depth > _limit)
         {

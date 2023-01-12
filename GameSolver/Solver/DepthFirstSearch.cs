@@ -5,21 +5,46 @@ namespace GameSolver.Solver;
 
 public sealed class DepthFirstSearchData
 {
-    public int MaxDepth { get; set; }
-    public bool Solved { get; set; }
-    public int SolutionDepth { get; set; }
-    public IGameAction[] Actions { get; }
+    public IList<IGameAction> Actions { get; }
 
-    public DepthFirstSearchData(int maxDepth, bool solved, int solutionDepth, IGameAction[] actions)
+    public DepthFirstSearchData(IList<IGameAction> actions)
     {
-        MaxDepth = maxDepth;
-        Solved = solved;
-        SolutionDepth = solutionDepth;
         Actions = actions;
     }
 }
 
-public sealed class DepthFirstSearch
+public sealed class StateData
+{
+    public IGameAction? Action { get; }
+    public StateData? PrevState { get; }
+    public State State { get; }
+    public int Depth { get; }
+
+    public StateData(IGameAction? action, State currentState, StateData? prevStateData, int depth)
+    {
+        Action = action;
+        PrevState = prevStateData;
+        State = currentState;
+        Depth = depth;
+    }
+
+    public IReadOnlyList<IGameAction> Solution()
+    {
+        var solution = new List<IGameAction>();
+
+        StateData currentState = this;
+        while (currentState.PrevState != null)
+        {
+            solution.Add(currentState.Action!);
+            currentState = currentState.PrevState;
+        }
+
+        solution.Reverse();
+        return solution;
+    }
+}
+
+public sealed class DepthFirstSearch : ISolver
 {
     private readonly Game _game;
     private readonly int _limit;
@@ -30,31 +55,85 @@ public sealed class DepthFirstSearch
         _limit = limit;
     }
 
-    public List<IGameAction> Solve()
+    public IReadOnlyList<IGameAction> SolveBacktrackingStrategy()
     {
-        var data = new DepthFirstSearchData(0, false, 0, new IGameAction[_limit]);
+        var data = new DepthFirstSearchData(new IGameAction[_limit]);
         var initialState = new State(_game);
         SolveRecursive(initialState, ref data, 0);
         return data.Actions.ToList();
     }
 
-    public List<List<IGameAction>> AllSolutionAtDepth()
-    { 
-        var initialState = new State(_game);
-        var results = new List<List<IGameAction>>();
-        var actions = new List<IGameAction>();
-        AllSolutionAtDepthRecursive(initialState, ref actions, ref results, 0);
-        return results;
+    public IReadOnlyList<IGameAction> Solve()
+    {
+        return SolveDefaultStrategy();
     }
 
+    public IReadOnlyList<IGameAction> SolveDefaultStrategy()
+    {
+        var frontier = new Stack<StateData>();
+        var initialState = new State(_game);
+        var initialStateData = new StateData(null, initialState, null, 0);
+        frontier.Push(initialStateData);
+
+        while (frontier.Count > 0)
+        {
+            StateData visitState = frontier.Pop();
+
+            if (visitState.State.IsSolved())
+            {
+                return visitState.Solution();
+            }
+
+            if (visitState.Depth >= _limit)
+            {
+                continue;
+            }
+
+            if (!IsCycle(visitState))
+            {
+                foreach (IGameAction action in visitState.State.LegalGameActions())
+                {
+                    State childState = State.Update(visitState.State, action);
+            
+                    var childStateData = new StateData(action, childState, visitState, visitState.Depth + 1);
+                    frontier.Push(childStateData);
+                }
+            }
+        }
+        
+        return new List<IGameAction>();
+    }
+    
+    public IReadOnlyList<IReadOnlyList<IGameAction>> SolveAllSolutionStrategy()
+    {
+        var initialState = new State(_game);
+        ICollection<IReadOnlyList<IGameAction>> results = new List<IReadOnlyList<IGameAction>>();
+        IList<IGameAction> actions = new List<IGameAction>();
+        AllSolutionAtDepthRecursive(initialState, ref actions, ref results, 0);
+        return (IReadOnlyList<IReadOnlyList<IGameAction>>)results;
+    }
+
+    private bool IsCycle(StateData stateData)
+    {
+        State state = stateData.State;
+        StateData currentStateData = stateData;
+        while (currentStateData.PrevState != null)
+        {
+            if (state.ZobristHash == currentStateData.PrevState.State.ZobristHash)
+            {
+                return true;
+            }
+
+            currentStateData = currentStateData.PrevState;
+        }
+
+        return false;
+    }
+    
     private bool SolveRecursive(State state, ref DepthFirstSearchData data, int depth)
     {
-        data.MaxDepth = Math.Max(data.MaxDepth, depth);
-
         if (state.IsSolved())
         {
-            data.Solved = true;
-            data.SolutionDepth = depth;
             return true;
         }
 
@@ -77,7 +156,7 @@ public sealed class DepthFirstSearch
         return false;
     }
 
-    private void AllSolutionAtDepthRecursive(State state, ref List<IGameAction> actions, ref List<List<IGameAction>> results, int depth)
+    private void AllSolutionAtDepthRecursive(State state, ref IList<IGameAction> actions, ref ICollection<IReadOnlyList<IGameAction>> results, int depth)
     {
         if (depth > _limit)
         {

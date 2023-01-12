@@ -69,7 +69,7 @@ public sealed class State : ICloneable
         action.Undo(this);
     }
 
-    public List<IGameAction> LegalGameActions()
+    public IEnumerable<IGameAction> LegalGameActions()
     {
         var legalActions = new List<IGameAction>();
 

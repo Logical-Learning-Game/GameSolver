@@ -6,16 +6,47 @@ namespace GameSolver.Solver;
 public sealed class BreadthFirstSearchData
 {
     public State State { get; }
-    public List<IGameAction> Actions { get; }
+    public IList<IGameAction> Actions { get; }
 
-    public BreadthFirstSearchData(State state, List<IGameAction> actions)
+    public BreadthFirstSearchData(State state, IList<IGameAction> actions)
     {
         State = state;
         Actions = actions;
     }
 }
 
-public sealed class BreadthFirstSearch
+public sealed class BFSStateData
+{
+    public IGameAction? Action { get; }
+    public BFSStateData? PrevState { get; }
+    public State State { get; }
+    public int Depth { get; }
+
+    public BFSStateData(IGameAction? action, BFSStateData? prevState, State state, int depth)
+    {
+        Action = action;
+        PrevState = prevState;
+        State = state;
+        Depth = depth;
+    }
+    
+    public IReadOnlyList<IGameAction> Solution()
+    {
+        var solution = new List<IGameAction>();
+
+        BFSStateData currentState = this;
+        while (currentState.PrevState != null)
+        {
+            solution.Add(currentState.Action!);
+            currentState = currentState.PrevState;
+        }
+
+        solution.Reverse();
+        return solution;
+    }
+}
+
+public sealed class BreadthFirstSearch : ISolver
 {
     private readonly Game _game;
 
@@ -24,23 +55,23 @@ public sealed class BreadthFirstSearch
         _game = game;
     }
 
-    public List<IGameAction> Solve()
+    public IReadOnlyList<IGameAction> Solve()
     {
         var initialState = new State(_game);
-        var queue = new Queue<BreadthFirstSearchData>();
-        var bfsData = new BreadthFirstSearchData(initialState, new List<IGameAction>());
-        queue.Enqueue(bfsData);
+        var frontier = new Queue<BFSStateData>();
+        var bfsData = new BFSStateData(null, null, initialState, 0);
+        frontier.Enqueue(bfsData);
 
         if (initialState.IsSolved())
         {
-            return bfsData.Actions;
+            return bfsData.Solution();
         }
 
         var exploredSet = new HashSet<long>();
 
-        while (queue.Count > 0)
+        while (frontier.Count > 0)
         {
-            BreadthFirstSearchData data = queue.Dequeue();
+            BFSStateData data = frontier.Dequeue();
             State currentState = data.State;
             exploredSet.Add(currentState.ZobristHash);
 
@@ -49,21 +80,84 @@ public sealed class BreadthFirstSearch
                 State childState = State.Update(currentState, action);
 
                 if (!exploredSet.Contains(childState.ZobristHash) && 
-                    queue.All(d => d.State.ZobristHash != childState.ZobristHash))
+                    frontier.All(d => d.State.ZobristHash != childState.ZobristHash))
                 {
-                    var copyActionList = new List<IGameAction>(data.Actions) {action};
+                    var childStateData = new BFSStateData(action, data, childState, data.Depth + 1);
                     
                     if (childState.IsSolved())
                     {
-                        return copyActionList;
+                        return childStateData.Solution();
                     }
                     
-                    var newBfsData = new BreadthFirstSearchData(childState, copyActionList);
-                    queue.Enqueue(newBfsData);
+                    frontier.Enqueue(childStateData);
                 }
             }
         }
 
-        return bfsData.Actions;
+        return new List<IGameAction>();
+    }
+
+    public IReadOnlyList<IReadOnlyList<IGameAction>> AllSolutionAtDepth(int depth)
+    {
+        var allSolutions = new List<IReadOnlyList<IGameAction>>();
+        
+        var initialState = new State(_game);
+        var frontier = new Queue<BFSStateData>();
+        var bfsData = new BFSStateData(null, null, initialState, 0);
+        frontier.Enqueue(bfsData);
+
+        if (initialState.IsSolved() && bfsData.Depth == depth)
+        {
+            allSolutions.Add(bfsData.Solution());
+            return allSolutions;
+        }
+
+        while (frontier.Count > 0)
+        {
+            BFSStateData data = frontier.Dequeue();
+            State currentState = data.State;
+
+            if (data.Depth > depth)
+            {
+                return allSolutions;
+            }
+
+            if (!IsCycle(data))
+            {
+                foreach (IGameAction action in currentState.LegalGameActions())
+                {
+                    State childState = State.Update(currentState, action);
+                
+                    var childStateData = new BFSStateData(action, data, childState, data.Depth + 1);
+            
+                    if (childStateData.Depth == depth && childState.IsSolved())
+                    {
+                        allSolutions.Add(childStateData.Solution());
+                        continue;
+                    }
+            
+                    frontier.Enqueue(childStateData);
+                }
+            }
+        }
+
+        return new List<IReadOnlyList<IGameAction>>();
+    }
+    
+    private static bool IsCycle(BFSStateData stateData)
+    {
+        State state = stateData.State;
+        BFSStateData currentStateData = stateData;
+        while (currentStateData.PrevState != null)
+        {
+            if (state.ZobristHash == currentStateData.PrevState.State.ZobristHash)
+            {
+                return true;
+            }
+
+            currentStateData = currentStateData.PrevState;
+        }
+
+        return false;
     }
 }

@@ -4,18 +4,6 @@ namespace GameSolver.Core;
 
 public sealed class Game
 {
-    // Player Direction
-    public const int PlayerDirUp = 0;
-    public const int PlayerDirLeft = 1;
-    public const int PlayerDirDown = 2;
-    public const int PlayerDirRight = 3;
-        
-    // Action Numeric
-    public const int Up = 0;
-    public const int Left = 1;
-    public const int Down = 2;
-    public const int Right = 3;
-
     // Board
     public int[,] Board { get; }
 

@@ -1,7 +1,7 @@
 ﻿using GameSolver.Core;
 using GameSolver.Core.Action;
 
-namespace GameSolver.Solver;
+namespace GameSolver.Solver.ShortestPath;
 
 public sealed class DepthFirstSearchData
 {
@@ -44,7 +44,7 @@ public sealed class StateData
     }
 }
 
-public sealed class DepthFirstSearch : ISolver
+public sealed class DepthFirstSearch : IShortestPathSolver
 {
     private readonly Game _game;
     private readonly int _limit;
@@ -59,7 +59,7 @@ public sealed class DepthFirstSearch : ISolver
     {
         var data = new DepthFirstSearchData(new IGameAction[_limit]);
         var initialState = new State(_game);
-        SolveRecursive(initialState, ref data, 0);
+        SolveRecursive(initialState, data, 0);
         return data.Actions.ToList();
     }
 
@@ -109,7 +109,7 @@ public sealed class DepthFirstSearch : ISolver
         var initialState = new State(_game);
         ICollection<IReadOnlyList<IGameAction>> results = new List<IReadOnlyList<IGameAction>>();
         IList<IGameAction> actions = new List<IGameAction>();
-        AllSolutionAtDepthRecursive(initialState, ref actions, ref results, 0);
+        AllSolutionAtDepthRecursive(initialState, actions, results, 0);
         return (IReadOnlyList<IReadOnlyList<IGameAction>>)results;
     }
 
@@ -130,7 +130,7 @@ public sealed class DepthFirstSearch : ISolver
         return false;
     }
     
-    private bool SolveRecursive(State state, ref DepthFirstSearchData data, int depth)
+    private bool SolveRecursive(State state, DepthFirstSearchData data, int depth)
     {
         if (state.IsSolved())
         {
@@ -145,7 +145,7 @@ public sealed class DepthFirstSearch : ISolver
         foreach (IGameAction action in state.LegalGameActions())
         {
             state.Update(action);
-            if (SolveRecursive(state, ref data, depth + 1))
+            if (SolveRecursive(state, data, depth + 1))
             {
                 data.Actions[depth] = action;
                 return true;
@@ -156,7 +156,7 @@ public sealed class DepthFirstSearch : ISolver
         return false;
     }
 
-    private void AllSolutionAtDepthRecursive(State state, ref IList<IGameAction> actions, ref ICollection<IReadOnlyList<IGameAction>> results, int depth)
+    private void AllSolutionAtDepthRecursive(State state, IList<IGameAction> actions, ICollection<IReadOnlyList<IGameAction>> results, int depth)
     {
         if (depth > _limit)
         {
@@ -175,7 +175,7 @@ public sealed class DepthFirstSearch : ISolver
                 state.Update(action);
 
                 actions.Add(action);
-                AllSolutionAtDepthRecursive(state, ref actions, ref results, depth + 1);
+                AllSolutionAtDepthRecursive(state, actions, results, depth + 1);
                 actions.RemoveAt(actions.Count - 1);
                 
                 state.Undo(action);

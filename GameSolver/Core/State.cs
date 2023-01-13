@@ -10,7 +10,9 @@ public sealed class State : ICloneable
     public List<Vector2Int> ScoreTiles { get; }
     public List<Vector2Int> KeyTiles { get; }
     public List<Vector2Int> DoorTiles { get; }
+    public List<Vector2Int> ConditionalTiles { get; }
     public int Keys { get; set; }
+    public int Conditions { get; set; }
     public Direction PlayerDirection { get; set; }
     public int[,] Board { get; }
     public long ZobristHash { get; set; }
@@ -25,7 +27,9 @@ public sealed class State : ICloneable
         ScoreTiles = game.ScoreTiles.ToList();
         KeyTiles = game.KeyTiles.ToList();
         DoorTiles = game.DoorTiles.ToList();
+        ConditionalTiles = game.ConditionalTiles.ToList();
         Keys = game.Keys;
+        Conditions = game.Conditions;
         ZobristHash = CalculateZobristHash(game.HashComponent);
         Game = game;
     }
@@ -49,7 +53,7 @@ public sealed class State : ICloneable
     {
         Vector2Int goalPos = GoalTile;
         int goalTile = Board[goalPos.Y, goalPos.X];
-        return (goalTile & Tile.Player) > 0;
+        return TileComponent.Player.In(goalTile);
     }
 
     public static State Update(State state, IGameAction action)
@@ -96,20 +100,19 @@ public sealed class State : ICloneable
             DirectionUtility.RotateBack(PlayerDirection),
             DirectionUtility.RotateRight(PlayerDirection)
         };
-
-        int collectTile = Tile.Score + Tile.Key;
+        
         
         for (int i = 0; i < nextPositions.Length; i++)
         {
             Vector2Int nextPos = nextPositions[i];
 
-            bool canPassTile = CheckPassableTile(nextPos.X, nextPos.Y);
+            bool canPassTile = CheckPassableTile(nextPos);
             if (!canPassTile)
             {
                 continue;
             }
             
-            bool isDoor = IsDoor(nextPos.X, nextPos.Y, playerDirections[i], out bool doorOpen);
+            bool isDoor = IsDoor(nextPos, playerDirections[i], out bool doorOpen);
             if (isDoor && !doorOpen && Keys == 0)
             {
                 continue;
@@ -118,16 +121,22 @@ public sealed class State : ICloneable
             var moveAction = new MoveAction(availableMoves[i]);
             
             int nextTile = Board[nextPos.Y, nextPos.X];
-            int collectTileCheck = nextTile & collectTile;
+            
+            bool isScore = TileComponent.Score.In(nextTile);
+            bool isKey = TileComponent.Key.In(nextTile);
 
-            if (collectTileCheck > 0)
+            if (isScore || isKey)
             {
-                IGameAction action = collectTileCheck switch
+                IGameAction action;
+                
+                if (isScore)
                 {
-                    Tile.Score => new CollectAction(moveAction, Tile.Score),
-                    Tile.Key => new CollectAction(moveAction, Tile.Key),
-                    _ => throw new InvalidEnumArgumentException(nameof(collectTileCheck), collectTileCheck, collectTileCheck.GetType())
-                };
+                    action = new CollectAction(moveAction, TileComponent.Score);
+                }
+                else
+                {
+                    action = new CollectAction(moveAction, TileComponent.Key);
+                }
                 
                 legalActions.Add(action);
             }
@@ -143,6 +152,22 @@ public sealed class State : ICloneable
         }
         
         return legalActions;
+    }
+
+    public void AddComponent(Vector2Int tilePosition, TileComponent component)
+    {
+        Board[tilePosition.Y, tilePosition.X] |= component.Value;
+    }
+
+    public void RemoveComponent(Vector2Int tilePosition, TileComponent component)
+    {
+        Board[tilePosition.Y, tilePosition.X] &= ~component.Value;
+    }
+    
+    public void UpdateZobristHash(Vector2Int position, int hashIndex)
+    {
+        int position1d = Game.ToOneDimension(position);
+        ZobristHash ^= Game.HashComponent[position1d, hashIndex];
     }
     
     public override string ToString()
@@ -166,27 +191,33 @@ public sealed class State : ICloneable
 
         foreach (Vector2Int tile in ScoreTiles)
         {
-            int score1DPos = Game.ColRowToTileIndex(tile.Y, tile.X, boardWidth);
+            int score1DPos = Game.ToOneDimension(tile.Y, tile.X, boardWidth);
             hash ^= hashComponent[score1DPos, Hash.Score];
         }
 
         foreach (Vector2Int tile in KeyTiles)
         {
-            int key1DPos = Game.ColRowToTileIndex(tile.Y, tile.X, boardWidth);
+            int key1DPos = Game.ToOneDimension(tile.Y, tile.X, boardWidth);
             hash ^= hashComponent[key1DPos, Hash.Key];
         }
 
         foreach (Vector2Int tile in DoorTiles)
         {
-            int door1DPos = Game.ColRowToTileIndex(tile.Y, tile.X, boardWidth);
+            int door1DPos = Game.ToOneDimension(tile.Y, tile.X, boardWidth);
             hash ^= hashComponent[door1DPos, Hash.DoorUp];
             hash ^= hashComponent[door1DPos, Hash.DoorLeft];
             hash ^= hashComponent[door1DPos, Hash.DoorDown];
             hash ^= hashComponent[door1DPos, Hash.DoorRight];
         }
 
+        foreach (Vector2Int tile in ConditionalTiles)
+        {
+            int conditional1DPos = Game.ToOneDimension(tile.Y, tile.X, boardWidth);
+            hash ^= hashComponent[conditional1DPos, Hash.Condition];
+        }
+
         Vector2Int playerPos = PlayerPosition;
-        int player1DPos = Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
+        int player1DPos = Game.ToOneDimension(playerPos.Y, playerPos.X, boardWidth);
 
         int hashDir = Hash.DirectionToHashIndex(PlayerDirection);
 
@@ -195,53 +226,56 @@ public sealed class State : ICloneable
         return hash;
     }
 
-    private bool IsDoor(int x, int y, Direction inboundDirection, out bool doorOpen)
+    public bool IsDoor(Vector2Int position, Direction inboundDirection, out bool doorOpen)
     {
-        Tuple<int, int> doorDirToBlock = inboundDirection switch
+        Tuple<TileComponent, TileComponent> doorDirToBlock = inboundDirection switch
         {
-            Direction.Up => new Tuple<int, int>(Tile.DoorDown, Tile.DoorDownOpen),
-            Direction.Left => new Tuple<int, int>(Tile.DoorRight, Tile.DoorRightOpen),
-            Direction.Down => new Tuple<int, int>(Tile.DoorUp, Tile.DoorUpOpen),
-            Direction.Right => new Tuple<int, int>(Tile.DoorLeft, Tile.DoorLeftOpen),
+            Direction.Up => new(TileComponent.DoorDown, TileComponent.DoorDownOpen),
+            Direction.Left => new(TileComponent.DoorRight, TileComponent.DoorRightOpen),
+            Direction.Down => new(TileComponent.DoorUp, TileComponent.DoorUpOpen),
+            Direction.Right => new(TileComponent.DoorLeft, TileComponent.DoorLeftOpen),
             _ => throw new InvalidEnumArgumentException(nameof(inboundDirection), (int)inboundDirection, inboundDirection.GetType())
         };
 
-        int dirToBlock = doorDirToBlock.Item1;
-        int isOpen = doorDirToBlock.Item2;
+        TileComponent dirToBlock = doorDirToBlock.Item1;
+        TileComponent isOpen = doorDirToBlock.Item2;
 
-        int currentTile = Board[y, x];
-        bool isDoor = (currentTile & dirToBlock) > 0;
+        int currentTile = Board[position.Y, position.X];
+        bool isDoor = dirToBlock.In(currentTile);
 
         doorOpen = false;
         if (isDoor)
         {
-            doorOpen = (currentTile & isOpen) > 0;
+            doorOpen = isOpen.In(currentTile);
         }
 
         return isDoor;
     }
     
-    private bool CheckPassableTile(int x, int y)
+    public bool CheckPassableTile(Vector2Int position)
     {
-        int height = Board.GetLength(0);
-        int width = Board.GetLength(1);
-
-        // Out of bound check
-        if (y < 0 || x < 0 || y > height - 1 || x > width - 1)
+        if (OutOfBoundCheck(position))
         {
             return false;
         }
 
-        int unPassableTile = Tile.Wall + Tile.Goal;
-        
-        int currentTile = Board[y, x];
-        int check = currentTile & unPassableTile;
+        int currentTile = Board[position.Y, position.X];
 
+        bool isWall = TileComponent.Wall.In(currentTile);
+        bool isGoal = TileComponent.Goal.In(currentTile);
+        
         if (ScoreTiles.Count == 0)
         {
-            return check is 0 or Tile.Goal;
+            return !isWall || isGoal;
         }
 
-        return check == 0;
+        return !isWall && !isGoal;
+    }
+
+    public bool OutOfBoundCheck(Vector2Int position)
+    {
+        int height = Board.GetLength(0);
+        int width = Board.GetLength(1);
+        return position.Y < 0 || position.X < 0 || position.Y > height - 1 || position.X > width - 1;
     }
 }

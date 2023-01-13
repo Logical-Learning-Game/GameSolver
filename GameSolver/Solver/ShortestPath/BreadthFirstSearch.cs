@@ -1,7 +1,7 @@
 ﻿using GameSolver.Core;
 using GameSolver.Core.Action;
 
-namespace GameSolver.Solver;
+namespace GameSolver.Solver.ShortestPath;
 
 public sealed class BreadthFirstSearchData
 {
@@ -46,7 +46,7 @@ public sealed class BFSStateData
     }
 }
 
-public sealed class BreadthFirstSearch : ISolver
+public sealed class BreadthFirstSearch : IShortestPathSolver
 {
     private readonly Game _game;
 
@@ -78,7 +78,7 @@ public sealed class BreadthFirstSearch : ISolver
             foreach (IGameAction action in currentState.LegalGameActions())
             {
                 State childState = State.Update(currentState, action);
-
+                
                 if (!exploredSet.Contains(childState.ZobristHash) && 
                     frontier.All(d => d.State.ZobristHash != childState.ZobristHash))
                 {

@@ -1,10 +1,9 @@
-﻿using System.Collections;
-using GameSolver.Core;
+﻿using GameSolver.Core;
 using GameSolver.Core.Action;
 
-namespace GameSolver.Solver;
+namespace GameSolver.Solver.ShortestPath;
 
-public sealed class IterativeDeepeningDepthFirstSearch : ISolver
+public sealed class IterativeDeepeningDepthFirstSearch : IShortestPathSolver
 {
     private readonly Game _game;
 

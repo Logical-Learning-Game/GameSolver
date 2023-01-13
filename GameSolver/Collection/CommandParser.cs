@@ -4,7 +4,7 @@ using GameSolver.Core.Action;
 
 namespace GameSolver.Collection;
 
-public class CommandParser
+public sealed class CommandParser
 {
     public string Text { get; init; }
 
@@ -13,7 +13,7 @@ public class CommandParser
         Text = text;
     }
 
-    public CommandParser(List<IGameAction> actions)
+    public CommandParser(IEnumerable<IGameAction> actions)
     {
         var strBuilder = new StringBuilder();
 

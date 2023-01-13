@@ -34,7 +34,6 @@ public class MoveAction : IGameAction
         Vector2Int playerPos = state.PlayerPosition;
         Vector2Int nextPos = state.PlayerPosition;
         Direction nextDir = state.PlayerDirection;
-        long[,] hashComponent = state.Game.HashComponent;
 
         nextDir = ToMove switch
         {
@@ -45,20 +44,13 @@ public class MoveAction : IGameAction
         };
 
         Vector2Int nextDirVec2 = DirectionUtility.DirectionToVector2(nextDir);
-        nextPos.X += nextDirVec2.X;
-        nextPos.Y += nextDirVec2.Y;
+        nextPos.Sum(nextDirVec2);
         
-        int boardWidth = state.Board.GetLength(1);
-        int start1DPos = Core.Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
-        int end1DPos = Core.Game.ColRowToTileIndex(nextPos.Y, nextPos.X, boardWidth);
+        state.RemoveComponent(playerPos, TileComponent.Player);
+        state.UpdateZobristHash(playerPos, Hash.DirectionToHashIndex(state.PlayerDirection));
         
-        state.Board[playerPos.Y, playerPos.X] &= ~Tile.Player;
-        int hashIndex = Hash.DirectionToHashIndex(state.PlayerDirection);
-        state.ZobristHash ^= hashComponent[start1DPos, hashIndex];
-        
-        state.Board[nextPos.Y, nextPos.X] |= Tile.Player;
-        hashIndex = Hash.DirectionToHashIndex(nextDir);
-        state.ZobristHash ^= hashComponent[end1DPos, hashIndex];
+        state.AddComponent(nextPos, TileComponent.Player);
+        state.UpdateZobristHash(nextPos, Hash.DirectionToHashIndex(nextDir));
             
         state.PlayerPosition = nextPos;
         state.PlayerDirection = nextDir;
@@ -69,11 +61,9 @@ public class MoveAction : IGameAction
         Vector2Int playerPos = state.PlayerPosition;
         Vector2Int prevPos = state.PlayerPosition;
         Direction prevDir = state.PlayerDirection;
-        long[,] hashComponent = state.Game.HashComponent;
 
         Vector2Int currentDir = DirectionUtility.DirectionToVector2(state.PlayerDirection);
-        prevPos.X -= currentDir.X;
-        prevPos.Y -= currentDir.Y;
+        prevPos.Minus(currentDir);
 
         prevDir = ToMove switch
         {
@@ -82,18 +72,12 @@ public class MoveAction : IGameAction
             Move.Right => DirectionUtility.RotateLeft(state.PlayerDirection),
             _ => prevDir
         };
-
-        int boardWidth = state.Board.GetLength(1);
-        int start1DPos = Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
-        int end1DPos = Game.ColRowToTileIndex(prevPos.Y, prevPos.X, boardWidth);
         
-        state.Board[playerPos.Y, playerPos.X] &= ~Tile.Player;
-        int hashIndex = Hash.DirectionToHashIndex(state.PlayerDirection);
-        state.ZobristHash ^= hashComponent[start1DPos, hashIndex];
+        state.RemoveComponent(playerPos, TileComponent.Player);
+        state.UpdateZobristHash(playerPos, Hash.DirectionToHashIndex(state.PlayerDirection));
         
-        state.Board[prevPos.Y, prevPos.X] |= Tile.Player;
-        hashIndex = Hash.DirectionToHashIndex(prevDir);
-        state.ZobristHash ^= hashComponent[end1DPos, hashIndex];
+        state.AddComponent(prevPos, TileComponent.Player);
+        state.UpdateZobristHash(prevPos, Hash.DirectionToHashIndex(prevDir));
 
         state.PlayerPosition = prevPos;
         state.PlayerDirection = prevDir;

@@ -7,6 +7,7 @@ using GameSolver.Collection.Encoder;
 using GameSolver.Core;
 using GameSolver.Core.Action;
 using GameSolver.Solver;
+using GameSolver.Solver.ShortestPath;
 using GameSolver.Utility;
 
 
@@ -92,7 +93,7 @@ static void TestNewGame()
     
     var watch = Stopwatch.StartNew();
     
-    var solver = new IterativeDeepeningDepthFirstSearch(game);
+    var solver = new BreadthFirstSearch(game);
     IEnumerable<IGameAction> result = solver.Solve();
     
     watch.Stop();
@@ -143,8 +144,8 @@ static void TestAllSolution()
     Console.WriteLine("Solutions:");
 
     var dfsSolver = new DepthFirstSearch(game, 16);
-    List<List<IGameAction>> results = dfsSolver.SolveAllSolutionStrategy();
-
+    IReadOnlyList<IReadOnlyList<IGameAction>> results = dfsSolver.SolveAllSolutionStrategy();
+    
     for (int i = 0; i < results.Count; i++)
     {
         CompositeCommand commands = new CommandParser(results[i]).Parse();
@@ -155,5 +156,52 @@ static void TestAllSolution()
 //TestAllSolution();
 
 
-var bench = new SolverBenchmark(10);
-bench.Run();
+// var bench = new SolverBenchmark(10);
+// bench.Run();
+
+// Vector2Int test = Vector2Int.Up;
+// Console.WriteLine(test.RotateLeft());
+// Console.WriteLine(test);
+
+
+static void DebugTest()
+{
+    Console.WriteLine("Debug Test");
+    
+    const string boardStr = @"
+        ..G
+        ...
+        P.*
+    ";
+    
+    var game = new Game(boardStr, Direction.Up);
+    var initialState = new State(game);
+    Console.WriteLine("board: ");
+
+    Console.WriteLine(initialState);
+    
+    //initialState.Update(MoveAction.Up);
+    //initialState.Update(MoveAction.Right);
+    // initialState.Update(MoveAction.Up);
+    // initialState.Update(new CollectAction(MoveAction.Right, TileComponent.Score));
+    // initialState.Update(MoveAction.Right);
+    // initialState.Update(MoveAction.Right);
+    // initialState.Update(MoveAction.Up);
+    //initialState.Update(MoveAction.Right);
+    
+    initialState.Update(MoveAction.Right);
+    initialState.Update(new CollectAction(MoveAction.Up, TileComponent.Score));
+    initialState.Update(MoveAction.Left);
+    
+    Console.WriteLine(initialState);
+    Utility.PrintList(initialState.LegalGameActions().ToList());
+    // var solver = new BreadthFirstSearch(game);
+    // IEnumerable<IGameAction> result = solver.Solve();
+    //
+    // var gameActions = result.ToList();
+    //
+    // Console.WriteLine("result:");
+    // Console.Write("action count: ");
+    // Utility.PrintList(gameActions);
+    // Console.WriteLine(gameActions.Count);
+}

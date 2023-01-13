@@ -14,9 +14,9 @@ public sealed class Game
 
 
     // TilePosition
-    public Vector2Int[] ScoreTiles { get; }
-    public Vector2Int[] KeyTiles { get; }
-    public Vector2Int[] DoorTiles { get; }
+    public IEnumerable<Vector2Int> ScoreTiles { get; }
+    public IEnumerable<Vector2Int> KeyTiles { get; }
+    public IEnumerable<Vector2Int> DoorTiles { get; }
     public Vector2Int GoalTile { get; }
 
     // HashComponent
@@ -45,37 +45,39 @@ public sealed class Game
                 if (j < trimmedBoardList[i].Length)
                 {
                     char tileChar = trimmedBoardList[i][j];
+                    TileComponent component = GetComponentFromChar(tileChar);
 
-                    if (Tile.IsDoorLink(tileChar))
+                    if (component.IsDoorLink())
                     {
-                        switch (tileChar)
+                        if (component.Equals(TileComponent.DoorUp))
                         {
-                            case Tile.ChDoorLinkUp:
-                                boardMatrix[i, j] |= Tile.DoorUp + Tile.Floor;
-                                boardMatrix[i - 1, j] |= Tile.DoorDown + Tile.Floor;
-                                break;
-                            case Tile.ChDoorLinkLeft:
-                                boardMatrix[i, j] |= Tile.DoorLeft + Tile.Floor;
-                                boardMatrix[i, j - 1] |= Tile.DoorRight + Tile.Floor;
-                                break;
-                            case Tile.ChDoorLinkDown:
-                                boardMatrix[i, j] |= Tile.DoorDown + Tile.Floor;
-                                boardMatrix[i + 1, j] |= Tile.DoorUp + Tile.Floor;
-                                break;
-                            case Tile.ChDoorLinkRight:
-                                boardMatrix[i, j] |= Tile.DoorRight + Tile.Floor;
-                                boardMatrix[i, j + 1] |= Tile.DoorLeft + Tile.Floor;
-                                break;
+                            boardMatrix[i, j] |= TileComponent.DoorUp.Value + TileComponent.Floor.Value;
+                            boardMatrix[i - 1, j] |= TileComponent.DoorDown.Value + TileComponent.Floor.Value;
+                        }
+                        else if (component.Equals(TileComponent.DoorLeft))
+                        {
+                            boardMatrix[i, j] |= TileComponent.DoorLeft.Value + TileComponent.Floor.Value;
+                            boardMatrix[i, j - 1] |= TileComponent.DoorRight.Value + TileComponent.Floor.Value;
+                        }
+                        else if (component.Equals(TileComponent.DoorDown))
+                        {
+                            boardMatrix[i, j] |= TileComponent.DoorDown.Value + TileComponent.Floor.Value;
+                            boardMatrix[i + 1, j] |= TileComponent.DoorUp.Value + TileComponent.Floor.Value;
+                        }
+                        else if (component.Equals(TileComponent.DoorRight))
+                        {
+                            boardMatrix[i, j] |= TileComponent.DoorRight.Value + TileComponent.Floor.Value;
+                            boardMatrix[i, j + 1] |= TileComponent.DoorUp.Value + TileComponent.Floor.Value;
                         }
                     }
                     else
                     {
-                        boardMatrix[i, j] |= Tile.CharToTile(tileChar);
+                        boardMatrix[i, j] |= component.Value;
                     }
                 }
                 else
                 {
-                    boardMatrix[i, j] = Tile.Wall;
+                    boardMatrix[i, j] = TileComponent.Wall.Value;
                 }
             }
         }
@@ -92,23 +94,23 @@ public sealed class Game
             {
                 int tile = boardMatrix[i, j];
 
-                if ((tile & Tile.Player) > 0)
+                if (TileComponent.Player.In(tile))
                 {
                     startPlayerTile = new Vector2Int(j, i);
                 }
-                else if ((tile & Tile.Goal) > 0)
+                else if (TileComponent.Goal.In(tile))
                 {
                     goalTile = new Vector2Int(j, i);
                 }
-                else if ((tile & Tile.Score) > 0)
+                else if (TileComponent.Score.In(tile))
                 {
                     scores.Add(new Vector2Int(j, i));
                 }
-                else if ((tile & Tile.Key) > 0)
+                else if (TileComponent.Key.In(tile))
                 {
                     keys.Add(new Vector2Int(j, i));
                 }
-                else if ((tile & (Tile.DoorUp + Tile.DoorLeft + Tile.DoorDown + Tile.DoorRight)) > 0)
+                else if (TileComponent.HaveDoorLink(tile))
                 {
                     doors.Add(new Vector2Int(j, i));
                 }
@@ -143,30 +145,104 @@ public sealed class Game
         {
             for (int j = 0; j < board.GetLength(1); j++)
             {
-                strBuilder.Append(Tile.TileToChar(board[i, j]));
+                int tile = board[i, j];
+
+                strBuilder.Append(TileToChar(tile));
             }
             strBuilder.AppendLine();
         }
         return strBuilder.ToString();
     }
-        
+
     public override string ToString()
     {
         return BoardToString(Board);
     }
         
-    public static int ColRowToTileIndex(int row, int col, int boardWidth)
+    public static int ToOneDimension(int row, int col, int boardWidth)
     {
         return row * boardWidth + col;
     }
 
+    public static int ToOneDimension(Vector2Int position, int boardWidth)
+    {
+        return position.Y * boardWidth + position.X;
+    }
+
+    public int ToOneDimension(Vector2Int position)
+    {
+        int boardWidth = Board.GetLength(1);
+        return ToOneDimension(position, boardWidth);
+    }
+
+    private static char TileToChar(int tile)
+    {
+        char ch;
+        
+        if (TileComponent.HaveDoorLink(tile))
+        {
+            ch = 'd';
+        }
+        else
+        {
+            if (TileComponent.Player.In(tile))
+            {
+                ch = 'P';
+            }
+            else if (TileComponent.Goal.In(tile))
+            {
+                ch = 'G';
+            }
+            else if (TileComponent.Score.In(tile))
+            {
+                ch = '*';
+            }
+            else if (TileComponent.Key.In(tile))
+            {
+                ch = 'k';
+            }
+            else if (TileComponent.Wall.In(tile))
+            {
+                ch = 'x';
+            }
+            else
+            {
+                ch = '.';
+            }
+        }
+
+        return ch;
+    }
+    
+    private static TileComponent GetComponentFromChar(char ch)
+    {
+        TileComponent component = ch switch
+        {
+            'P' => TileComponent.Player,
+            '.' => TileComponent.Floor,
+            'x' => TileComponent.Wall,
+            '*' => TileComponent.Score,
+            'k' => TileComponent.Key,
+            'G' => TileComponent.Goal,
+            'u' => TileComponent.DoorUp,
+            'l' => TileComponent.DoorLeft,
+            'd' => TileComponent.DoorDown,
+            'r' => TileComponent.DoorRight,
+            _ => throw new ArgumentOutOfRangeException(nameof(ch), ch, "char argument not in range")
+        };
+
+        return component;
+    }
+    
     private long[,] ConstructZobristHashComponent() 
     {
         int boardHeight = Board.GetLength(0);
         int boardWidth = Board.GetLength(1);
         int boardSize = boardHeight * boardWidth;
 
-        var zobristTable = new long[boardSize, Hash.StateCount];
+        int stateCount = Hash.StateCount;
+        
+        var zobristTable = new long[boardSize, stateCount];
 
         var selectedNumber = new HashSet<long>();
         var random = new Random();

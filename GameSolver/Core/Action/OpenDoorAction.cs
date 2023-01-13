@@ -26,39 +26,35 @@ public class OpenDoorAction : IGameAction
             _ => throw new InvalidEnumArgumentException(nameof(toMove), (int)toMove, toMove.GetType())
         };
 
-        Tuple<int, int> doorDirToOpen = nextDir switch
+        Tuple<TileComponent, int> doorDirToOpen = nextDir switch
         {
-            Direction.Up => new Tuple<int, int>(Tile.DoorUpOpen, Hash.DoorUp),
-            Direction.Left => new Tuple<int, int>(Tile.DoorLeftOpen, Hash.DoorLeft),
-            Direction.Down => new Tuple<int, int>(Tile.DoorDownOpen, Hash.DoorDown),
-            Direction.Right => new Tuple<int, int>(Tile.DoorRightOpen, Hash.DoorRight),
+            Direction.Up => new(TileComponent.DoorUpOpen, Hash.DoorUp),
+            Direction.Left => new(TileComponent.DoorLeftOpen, Hash.DoorLeft),
+            Direction.Down => new(TileComponent.DoorDownOpen, Hash.DoorDown),
+            Direction.Right => new(TileComponent.DoorRightOpen, Hash.DoorRight),
             _ => throw new InvalidEnumArgumentException(nameof(nextDir), (int)nextDir, toMove.GetType())
         };
         
-        Tuple<int, int> doorPairToOpen = nextDir switch
+        Tuple<TileComponent, int> doorPairToOpen = nextDir switch
         {
-            Direction.Up => new Tuple<int, int>(Tile.DoorDownOpen, Hash.DoorDown),
-            Direction.Left => new Tuple<int, int>(Tile.DoorRightOpen, Hash.DoorRight),
-            Direction.Down => new Tuple<int, int>(Tile.DoorUpOpen, Hash.DoorUp),
-            Direction.Right => new Tuple<int, int>(Tile.DoorLeftOpen, Hash.DoorLeft),
+            Direction.Up => new(TileComponent.DoorDownOpen, Hash.DoorDown),
+            Direction.Left => new(TileComponent.DoorRightOpen, Hash.DoorRight),
+            Direction.Down => new(TileComponent.DoorUpOpen, Hash.DoorUp),
+            Direction.Right => new(TileComponent.DoorLeftOpen, Hash.DoorLeft),
             _ => throw new InvalidEnumArgumentException(nameof(nextDir), (int)nextDir, toMove.GetType())
         };
-
-        int boardWidth = state.Board.GetLength(1);
-
-        int doorDir = doorDirToOpen.Item1;
+        
+        TileComponent doorDir = doorDirToOpen.Item1;
         int doorDirHash = doorDirToOpen.Item2;
-        int door1DPos = Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
-        state.Board[playerPos.Y, playerPos.X] |= doorDir;
-        state.ZobristHash ^= state.Game.HashComponent[door1DPos, doorDirHash];
+        state.AddComponent(playerPos, doorDir);
+        state.UpdateZobristHash(playerPos, doorDirHash);
 
         Vector2Int nextDoorOffset = DirectionUtility.DirectionToVector2(nextDir);
-        int doorPairDir = doorPairToOpen.Item1;
+        TileComponent doorPairDir = doorPairToOpen.Item1;
         int doorPairHash = doorPairToOpen.Item2;
-        var doorPairPos = new Vector2Int(playerPos.X + nextDoorOffset.X, playerPos.Y + nextDoorOffset.Y);
-        int doorPair1DPos = Game.ColRowToTileIndex(doorPairPos.Y, doorPairPos.X, boardWidth);
-        state.Board[doorPairPos.Y, doorPairPos.X] |= doorPairDir;
-        state.ZobristHash ^= state.Game.HashComponent[doorPair1DPos, doorPairHash];
+        Vector2Int doorPairPos = Vector2Int.Sum(playerPos, nextDoorOffset);
+        state.AddComponent(doorPairPos, doorPairDir);
+        state.UpdateZobristHash(doorPairPos, doorPairHash);
         
         state.Keys--;
 
@@ -82,39 +78,35 @@ public class OpenDoorAction : IGameAction
             _ => throw new InvalidEnumArgumentException(nameof(toMove), (int)toMove, toMove.GetType())
         };
 
-        Tuple<int, int> doorDirToReverse = nextDir switch
+        Tuple<TileComponent, int> doorDirToReverse = nextDir switch
         {
-            Direction.Up => new Tuple<int, int>(Tile.DoorUpOpen, Hash.DoorUp),
-            Direction.Left => new Tuple<int, int>(Tile.DoorLeftOpen, Hash.DoorLeft),
-            Direction.Down => new Tuple<int, int>(Tile.DoorDownOpen, Hash.DoorDown),
-            Direction.Right => new Tuple<int, int>(Tile.DoorRight, Hash.DoorRight),
+            Direction.Up => new(TileComponent.DoorUpOpen, Hash.DoorUp),
+            Direction.Left => new(TileComponent.DoorLeftOpen, Hash.DoorLeft),
+            Direction.Down => new(TileComponent.DoorDownOpen, Hash.DoorDown),
+            Direction.Right => new(TileComponent.DoorRight, Hash.DoorRight),
             _ => throw new InvalidEnumArgumentException(nameof(nextDir), (int)nextDir, toMove.GetType())
         };
 
-        Tuple<int, int> doorPairToReverse = nextDir switch
+        Tuple<TileComponent, int> doorPairToReverse = nextDir switch
         {
-            Direction.Up => new Tuple<int, int>(Tile.DoorDownOpen, Hash.DoorDown),
-            Direction.Left =>  new Tuple<int, int>(Tile.DoorRightOpen, Hash.DoorRight),
-            Direction.Down => new Tuple<int, int>(Tile.DoorUpOpen, Hash.DoorUp),
-            Direction.Right =>  new Tuple<int, int>(Tile.DoorLeftOpen, Hash.DoorLeft),
+            Direction.Up => new(TileComponent.DoorDownOpen, Hash.DoorDown),
+            Direction.Left =>  new(TileComponent.DoorRightOpen, Hash.DoorRight),
+            Direction.Down => new(TileComponent.DoorUpOpen, Hash.DoorUp),
+            Direction.Right =>  new(TileComponent.DoorLeftOpen, Hash.DoorLeft),
             _ => throw new InvalidEnumArgumentException(nameof(nextDir), (int)nextDir, toMove.GetType())
         };
 
-        int boardWidth = state.Board.GetLength(1);
-
-        int doorDir = doorDirToReverse.Item1;
+        TileComponent doorDir = doorDirToReverse.Item1;
         int doorDirHash = doorDirToReverse.Item2;
-        int door1DPos = Game.ColRowToTileIndex(playerPos.Y, playerPos.X, boardWidth);
-        state.Board[playerPos.Y, playerPos.X] &= ~doorDir;
-        state.ZobristHash ^= state.Game.HashComponent[door1DPos, doorDirHash];
+        state.RemoveComponent(playerPos, doorDir);
+        state.UpdateZobristHash(playerPos, doorDirHash);
 
         Vector2Int prevDoorOffset = DirectionUtility.DirectionToVector2(nextDir);
-        int doorPairDir = doorPairToReverse.Item1;
+        TileComponent doorPairDir = doorPairToReverse.Item1;
         int doorPairHash = doorPairToReverse.Item2;
-        var doorPairPos = new Vector2Int(playerPos.X + prevDoorOffset.X, playerPos.Y + prevDoorOffset.Y);
-        int doorPair1DPos = Game.ColRowToTileIndex(doorPairPos.Y, doorPairPos.X, boardWidth);
-        state.Board[doorPairPos.Y, doorPairPos.X] &= ~doorPairDir;
-        state.ZobristHash ^= state.Game.HashComponent[doorPair1DPos, doorPairHash];
+        Vector2Int doorPairPos = Vector2Int.Sum(playerPos, prevDoorOffset);
+        state.RemoveComponent(doorPairPos, doorPairDir);
+        state.UpdateZobristHash(doorPairPos, doorPairHash);
 
         state.Keys++;
     }

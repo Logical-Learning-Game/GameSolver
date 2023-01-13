@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using GameSolver.Core;
 using GameSolver.Solver;
+using GameSolver.Solver.ShortestPath;
 
 namespace GameSolver.Benchmark;
 
@@ -8,7 +9,7 @@ public sealed class SolverBenchmark
 {
     private readonly int _n;
 
-    private readonly IEnumerable<ISolver> _solvers;
+    private readonly IEnumerable<IShortestPathSolver> _solvers;
 
     private const string Map1 = @"
         ....*..xx
@@ -23,7 +24,7 @@ public sealed class SolverBenchmark
         _n = n;
         var game = new Game(Map1, Direction.Up);
         
-        _solvers = new ISolver[]
+        _solvers = new IShortestPathSolver[]
         {
             new BreadthFirstSearch(game),
             new IterativeDeepeningDepthFirstSearch(game)
@@ -35,7 +36,7 @@ public sealed class SolverBenchmark
         var timeResults = new long[_n];
         var peakMemoryResults = new long[_n];
 
-        foreach (ISolver solver in _solvers)
+        foreach (IShortestPathSolver solver in _solvers)
         {
             for (int i = 0; i < _n; i++)
             {

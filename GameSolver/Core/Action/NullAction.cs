@@ -1,6 +1,6 @@
 ﻿namespace GameSolver.Core.Action;
 
-public class NullAction : IGameAction
+public sealed class NullAction : IGameAction
 {
     public void Do(State state)
     {

@@ -2,7 +2,7 @@
 
 namespace GameSolver.Core.Action;
 
-public class MoveAction : IGameAction
+public sealed class MoveAction : IGameAction
 {
     public static MoveAction Up { get; }
     public static MoveAction Left { get; }

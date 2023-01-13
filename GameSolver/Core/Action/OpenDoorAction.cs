@@ -2,7 +2,7 @@
 
 namespace GameSolver.Core.Action;
 
-public class OpenDoorAction : IGameAction
+public sealed class OpenDoorAction : IGameAction
 {
     private readonly MoveAction _moveAction;
 

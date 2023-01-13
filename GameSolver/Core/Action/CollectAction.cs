@@ -1,6 +1,6 @@
 ﻿namespace GameSolver.Core.Action;
 
-public class CollectAction : IGameAction
+public sealed class CollectAction : IGameAction
 {
     private readonly MoveAction _moveAction;
     private readonly TileComponent _component;

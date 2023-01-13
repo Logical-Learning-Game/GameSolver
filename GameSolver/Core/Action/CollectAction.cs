@@ -49,6 +49,12 @@ public class CollectAction : IGameAction
             state.Keys++;
             state.KeyTiles.RemoveAll(v => v.Equals(playerPos));
         }
+        else if (component.Equals(TileComponent.Conditional))
+        {
+            hashIndex = Hash.Condition;
+            state.Conditions++;
+            state.ConditionalTiles.RemoveAll(v => v.Equals(playerPos));
+        }
         else
         {
             throw new ArgumentException("component cannot be collected by player", nameof(component));
@@ -73,6 +79,12 @@ public class CollectAction : IGameAction
             hashIndex = Hash.Key;
             state.Keys--;
             state.KeyTiles.Add(playerPos);
+        }
+        else if (component.Equals(TileComponent.Conditional))
+        {
+            hashIndex = Hash.Condition;
+            state.Conditions--;
+            state.ConditionalTiles.Add(playerPos);
         }
         else
         {

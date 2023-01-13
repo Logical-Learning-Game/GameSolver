@@ -107,6 +107,7 @@ public readonly struct TileComponent : IEquatable<TileComponent>, IEquatable<int
     public static TileComponent DoorDownOpen { get; }
     public static TileComponent DoorRight { get; }
     public static TileComponent DoorRightOpen { get; }
+    public static TileComponent Conditional { get; }
 
     public int Value { get; }
 
@@ -131,6 +132,7 @@ public readonly struct TileComponent : IEquatable<TileComponent>, IEquatable<int
         DoorDownOpen = new TileComponent(1 << 11);
         DoorRight = new TileComponent(1 << 12);
         DoorRightOpen = new TileComponent(1 << 13);
+        Conditional = new TileComponent(1 << 14);
     }
 
     public static IReadOnlyCollection<TileComponent> AllComponents()
@@ -138,6 +140,7 @@ public readonly struct TileComponent : IEquatable<TileComponent>, IEquatable<int
         return new[]
         {
             Player, Floor, Wall, Score, Key, Goal, DoorUp, DoorUpOpen, DoorDown, DoorDownOpen,
+            DoorLeft, DoorLeftOpen, DoorRight, DoorRightOpen, Conditional
         };
     }
     

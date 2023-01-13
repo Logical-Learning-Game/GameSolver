@@ -11,12 +11,14 @@ public sealed class Game
     public Vector2Int StartPlayerTile { get; }
     public Direction StartPlayerDirection { get; set; }
     public int Keys { get; set; }
+    public int Conditions { get; set; }
 
 
     // TilePosition
     public IEnumerable<Vector2Int> ScoreTiles { get; }
     public IEnumerable<Vector2Int> KeyTiles { get; }
     public IEnumerable<Vector2Int> DoorTiles { get; }
+    public IEnumerable<Vector2Int> ConditionalTiles { get; }
     public Vector2Int GoalTile { get; }
 
     // HashComponent
@@ -88,6 +90,7 @@ public sealed class Game
         var scores = new List<Vector2Int>();
         var keys = new List<Vector2Int>();
         var doors = new List<Vector2Int>();
+        var conditions = new List<Vector2Int>();
         for (int i = 0; i < boardMatrix.GetLength(0); i++)
         {
             for (int j = 0; j < boardMatrix.GetLength(1); j++)
@@ -110,6 +113,10 @@ public sealed class Game
                 {
                     keys.Add(new Vector2Int(j, i));
                 }
+                else if (TileComponent.Conditional.In(tile))
+                {
+                    conditions.Add(new Vector2Int(j, i));
+                }
                 else if (TileComponent.HaveDoorLink(tile))
                 {
                     doors.Add(new Vector2Int(j, i));
@@ -131,7 +138,9 @@ public sealed class Game
         StartPlayerTile = startPlayerTile.Value;
         ScoreTiles = scores.ToArray();
         KeyTiles = keys.ToArray();
+        ConditionalTiles = conditions.ToArray();
         Keys = 0;
+        Conditions = 0;
         DoorTiles = doors.ToArray();
         GoalTile = goalTile.Value;
         StartPlayerDirection = startPlayerDirection;

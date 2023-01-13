@@ -10,7 +10,9 @@ public sealed class State : ICloneable
     public List<Vector2Int> ScoreTiles { get; }
     public List<Vector2Int> KeyTiles { get; }
     public List<Vector2Int> DoorTiles { get; }
+    public List<Vector2Int> ConditionalTiles { get; }
     public int Keys { get; set; }
+    public int Conditions { get; set; }
     public Direction PlayerDirection { get; set; }
     public int[,] Board { get; }
     public long ZobristHash { get; set; }
@@ -25,7 +27,9 @@ public sealed class State : ICloneable
         ScoreTiles = game.ScoreTiles.ToList();
         KeyTiles = game.KeyTiles.ToList();
         DoorTiles = game.DoorTiles.ToList();
+        ConditionalTiles = game.ConditionalTiles.ToList();
         Keys = game.Keys;
+        Conditions = game.Conditions;
         ZobristHash = CalculateZobristHash(game.HashComponent);
         Game = game;
     }
@@ -204,6 +208,12 @@ public sealed class State : ICloneable
             hash ^= hashComponent[door1DPos, Hash.DoorLeft];
             hash ^= hashComponent[door1DPos, Hash.DoorDown];
             hash ^= hashComponent[door1DPos, Hash.DoorRight];
+        }
+
+        foreach (Vector2Int tile in ConditionalTiles)
+        {
+            int conditional1DPos = Game.ToOneDimension(tile.Y, tile.X, boardWidth);
+            hash ^= hashComponent[conditional1DPos, Hash.Condition];
         }
 
         Vector2Int playerPos = PlayerPosition;

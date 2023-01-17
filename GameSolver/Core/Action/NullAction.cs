@@ -1,6 +1,6 @@
 ﻿namespace GameSolver.Core.Action;
 
-public sealed class NullAction : IGameAction
+public class NullAction : IGameAction
 {
     public void Do(State state)
     {
@@ -14,6 +14,6 @@ public sealed class NullAction : IGameAction
 
     public override string ToString()
     {
-        return "";
+        return string.Empty;
     }
 }

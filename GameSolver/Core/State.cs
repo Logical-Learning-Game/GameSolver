@@ -259,4 +259,66 @@ public sealed class State : ICloneable
         int width = Board.GetLength(1);
         return position.Y < 0 || position.X < 0 || position.Y > height - 1 || position.X > width - 1;
     }
+
+    public RunCommandResult RunCommand(CommandNode node)
+    {
+        var result = new RunCommandResult(null, null, false);
+
+        CommandNode? currentNode = node;
+
+        var exploredSet = new HashSet<long>();
+        
+        while (currentNode is not null)
+        {
+            try
+            {
+                result.ActionHistory.Add(currentNode.Action);
+                Update(currentNode.Action);
+            }
+            catch (IndexOutOfRangeException)
+            {
+                return result.Fail();
+            }
+
+            // validate player position after update the state
+            bool validPlayerPos = CheckPassableTile(PlayerPosition);
+            bool isDoor = IsDoor(PlayerPosition, PlayerDirection, out bool isDoorOpen);
+            
+            if (isDoor && !isDoorOpen || !isDoor && isDoorOpen || !validPlayerPos)
+            {
+                return result.Fail();
+            }
+            
+            // detect cycle in command
+            if (exploredSet.Contains(ZobristHash))
+            {
+                return result.Fail();
+            }
+            
+            if (currentNode.MainBranch is null || Conditions > 0 && !currentNode.ConditionalBranchFilled)
+            {
+                result.CheckpointNode = currentNode;
+                result.StateSnapshot = (State)Clone();
+            }
+
+            if (IsSolved())
+            {
+                return result.Success();
+            }
+
+            exploredSet.Add(ZobristHash);
+
+            if (Conditions > 0 && currentNode.ConditionalBranch is not null)
+            {
+                currentNode = currentNode.ConditionalBranch;
+                Conditions--;
+            }
+            else
+            {
+                currentNode = currentNode.MainBranch;
+            }
+        }
+
+        return result.Fail();
+    }
 }

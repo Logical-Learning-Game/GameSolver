@@ -214,6 +214,10 @@ public sealed class Game
             {
                 ch = 'x';
             }
+            else if (TileComponent.Conditional.In(tile))
+            {
+                ch = 'c';
+            }
             else
             {
                 ch = '.';
@@ -237,6 +241,7 @@ public sealed class Game
             'l' => TileComponent.DoorLeft,
             'd' => TileComponent.DoorDown,
             'r' => TileComponent.DoorRight,
+            'c' => TileComponent.Conditional,
             _ => throw new ArgumentOutOfRangeException(nameof(ch), ch, "char argument not in range")
         };
 

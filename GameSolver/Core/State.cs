@@ -1,12 +1,14 @@
 ﻿using System.ComponentModel;
+using System.Text;
 using GameSolver.Core.Action;
+using GameSolver.Solver.ShortestCommand;
 
 namespace GameSolver.Core;
 
 public sealed class State : ICloneable
 {
     public Vector2Int PlayerPosition { get; set; }
-    public Vector2Int GoalTile { get; } 
+    public Vector2Int GoalTile { get; }
     public List<Vector2Int> ScoreTiles { get; }
     public List<Vector2Int> KeyTiles { get; }
     public List<Vector2Int> DoorTiles { get; }
@@ -17,10 +19,10 @@ public sealed class State : ICloneable
     public int[,] Board { get; }
     public long ZobristHash { get; set; }
     public Game Game { get; }
-        
+    
     public State(Game game)
     {
-        Board = (int[,])game.Board.Clone();
+        Board = (int[,]) game.Board.Clone();
         PlayerPosition = game.StartPlayerTile;
         PlayerDirection = game.StartPlayerDirection;
         GoalTile = game.GoalTile;
@@ -34,19 +36,34 @@ public sealed class State : ICloneable
         Game = game;
     }
 
-    private State(Vector2Int playerPosition, Vector2Int goalTile, List<Vector2Int> scoreTiles, List<Vector2Int> keyTiles,
-        int keys, List<Vector2Int> doorTiles, Direction playerDirection, int[,] board, long zobristHash, Core.Game game)
+    private State(Vector2Int playerPosition, Vector2Int goalTile, List<Vector2Int> scoreTiles,
+        List<Vector2Int> keyTiles, List<Vector2Int> conditionalTiles, int conditions,
+        int keys, List<Vector2Int> doorTiles, Direction playerDirection, int[,] board, long zobristHash, Game game)
     {
         PlayerPosition = playerPosition;
         GoalTile = goalTile;
-        ScoreTiles = scoreTiles ?? throw new ArgumentNullException(nameof(scoreTiles), "score tiles should not be null");
+        ScoreTiles = scoreTiles ??
+                     throw new ArgumentNullException(nameof(scoreTiles), "score tiles should not be null");
         PlayerDirection = playerDirection;
         Board = board ?? throw new ArgumentNullException(nameof(board), "board should not be null");
         ZobristHash = zobristHash;
         Game = game ?? throw new ArgumentNullException(nameof(game), "game should not be null");
-        KeyTiles = keyTiles ?? throw new ArgumentNullException(nameof(keyTiles), "key tiles should not be null");;
+        KeyTiles = keyTiles ?? throw new ArgumentNullException(nameof(keyTiles), "key tiles should not be null");
+        ConditionalTiles = conditionalTiles ?? throw new ArgumentNullException(nameof(conditionalTiles), "conditional tiles should not be null");
         Keys = keys;
+        Conditions = conditions;
         DoorTiles = doorTiles ?? throw new ArgumentNullException(nameof(doorTiles), "door tiles should not be null");
+    }
+
+    public object Clone()
+    {
+        var copyScoreTiles = new List<Vector2Int>(ScoreTiles);
+        var copyKeyTiles = new List<Vector2Int>(KeyTiles);
+        var copyDoorTiles = new List<Vector2Int>(DoorTiles);
+        var copyConditionalTiles = new List<Vector2Int>(ConditionalTiles);
+        var copyBoard = (int[,]) Board.Clone();
+        return new State(PlayerPosition, GoalTile, copyScoreTiles, copyKeyTiles, copyConditionalTiles, Conditions, Keys, copyDoorTiles, PlayerDirection,
+            copyBoard, ZobristHash, Game);
     }
 
     public bool IsSolved()
@@ -62,7 +79,7 @@ public sealed class State : ICloneable
         action.Do(copyThisState);
         return copyThisState;
     }
-        
+
     public void Update(IGameAction action)
     {
         action.Do(this);
@@ -119,38 +136,11 @@ public sealed class State : ICloneable
             }
             
             var moveAction = new MoveAction(availableMoves[i]);
-            
-            int nextTile = Board[nextPos.Y, nextPos.X];
-            
-            bool isScore = TileComponent.Score.In(nextTile);
-            bool isKey = TileComponent.Key.In(nextTile);
+            IGameAction action = moveAction.WithInteraction();
 
-            if (isScore || isKey)
-            {
-                IGameAction action;
-                
-                if (isScore)
-                {
-                    action = new CollectAction(moveAction, TileComponent.Score);
-                }
-                else
-                {
-                    action = new CollectAction(moveAction, TileComponent.Key);
-                }
-                
-                legalActions.Add(action);
-            }
-            else if (isDoor && !doorOpen && Keys > 0)
-            {
-                IGameAction action = new OpenDoorAction(moveAction);
-                legalActions.Add(action);
-            }
-            else
-            {
-                legalActions.Add(moveAction);
-            }
+            legalActions.Add(action);
         }
-        
+
         return legalActions;
     }
 
@@ -163,25 +153,16 @@ public sealed class State : ICloneable
     {
         Board[tilePosition.Y, tilePosition.X] &= ~component.Value;
     }
-    
+
     public void UpdateZobristHash(Vector2Int position, int hashIndex)
     {
         int position1d = Game.ToOneDimension(position);
         ZobristHash ^= Game.HashComponent[position1d, hashIndex];
     }
-    
+
     public override string ToString()
     {
         return Game.BoardToString(Board);
-    }
-
-    public object Clone()
-    {
-        var copyScoreTiles = new List<Vector2Int>(ScoreTiles);
-        var copyKeyTiles = new List<Vector2Int>(KeyTiles);
-        var copyDoorTiles = new List<Vector2Int>(DoorTiles);
-        var copyBoard = (int[,])Board.Clone();
-        return new State(PlayerPosition, GoalTile, copyScoreTiles, copyKeyTiles, Keys, copyDoorTiles, PlayerDirection, copyBoard, ZobristHash, Game);
     }
 
     private long CalculateZobristHash(long[,] hashComponent)
@@ -251,7 +232,7 @@ public sealed class State : ICloneable
 
         return isDoor;
     }
-    
+
     public bool CheckPassableTile(Vector2Int position)
     {
         if (OutOfBoundCheck(position))

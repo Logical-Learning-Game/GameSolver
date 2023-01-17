@@ -11,4 +11,9 @@ public sealed class NullAction : IGameAction
     {
         
     }
+
+    public override string ToString()
+    {
+        return "";
+    }
 }

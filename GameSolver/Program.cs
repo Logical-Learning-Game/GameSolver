@@ -7,6 +7,7 @@ using GameSolver.Collection.Encoder;
 using GameSolver.Core;
 using GameSolver.Core.Action;
 using GameSolver.Solver;
+using GameSolver.Solver.ShortestCommand;
 using GameSolver.Solver.ShortestPath;
 using GameSolver.Utility;
 
@@ -190,7 +191,7 @@ static void DebugTest()
     //initialState.Update(MoveAction.Right);
     
     initialState.Update(MoveAction.Right);
-    initialState.Update(new CollectAction(MoveAction.Up, TileComponent.Score));
+    initialState.Update(MoveAction.Up.WithInteraction());
     initialState.Update(MoveAction.Left);
     
     Console.WriteLine(initialState);
@@ -205,3 +206,128 @@ static void DebugTest()
     // Utility.PrintList(gameActions);
     // Console.WriteLine(gameActions.Count);
 }
+//DebugTest();
+
+static void TestRunCommand()
+{
+    Console.WriteLine("Test Run Command");
+    
+    const string boardStr = @"
+        ..G
+        ..*
+        P.c
+    ";
+
+    var game = new Game(boardStr, Direction.Up);
+    var testState = new State(game);
+    
+    var startNode = new CommandNode(new NullAction());
+    var node1 = new CommandNode(MoveAction.Right.WithInteraction());
+    var node2 = new CommandNode(MoveAction.Up.WithInteraction());
+    var node3 = new CommandNode(MoveAction.Left.WithInteraction());
+    var node4 = new CommandNode(MoveAction.Right.WithInteraction());
+
+    startNode.MainBranch = node1;
+    node1.MainBranch = node2;
+    node2.MainBranch = node3;
+    node3.MainBranch = node4;
+
+    var shortestCmdSolver = new ShortestCommandSolver(game, 5);
+    
+    var watch = Stopwatch.StartNew();
+
+    
+    
+    //RunCommandResult runResult = shortestCmdSolver.RunCommand(node1, testState);
+    //var a = shortestCmdSolver.LegalExistCommandNodes(node1, node4);
+    
+    watch.Stop();
+    var elapsedMs = watch.ElapsedMilliseconds;
+    
+    // Console.WriteLine(testState);
+    // Console.WriteLine($"Run status: {runResult.RunStatus}");
+    // Console.WriteLine("State snapshot:");
+    // Console.WriteLine(runResult.StateSnapshot);
+    // Console.WriteLine($"Time usage: {elapsedMs} ms");
+    //Utility.PrintList(a);
+    //Console.WriteLine(shortestCmdSolver.LegalExistCommandNodes(node1, node4).Count());
+}
+//TestRunCommand();
+
+static void TestShortestCommandSolver()
+{
+    Console.WriteLine("Test Shortest Command Solver");
+    
+    const string boardStr = @"
+        ..G
+        ...
+        P.*
+    ";
+    
+    const string boardStr2 = @"
+        ..G..
+        .....
+        .....
+        .....
+        .....
+        P....
+    ";
+    
+    const string boardStr3 = @"
+        ....G
+        ....c
+        .x...
+        ..c..
+        Px...
+    ";
+    
+    const string boardStr4 = @"
+        G.c..
+        xx...
+        ..c..
+        Px...
+    ";
+    
+    const string boardStr5 = @"
+            ....*..xx
+    		.x.x.x.xx
+    		..*...*..
+    		.x.x.x.x.
+    		P.......G
+        ";
+    
+    const string boardStr6 = @"
+            P.G
+        ";
+
+    var game = new Game(boardStr4, Direction.Up);
+    var solver = new ShortestCommandSolver(game, 20);
+    Console.WriteLine("Board:");
+    Console.WriteLine(game);
+    
+    CommandNode? result = solver.Solve();
+
+    if (result is null)
+    {
+        Console.WriteLine("Result not found");
+    }
+    else
+    {
+        var testState = new State(game);
+
+        RunCommandResult runResult = testState.RunCommand(result);
+
+        // foreach (IGameAction action in runResult.ActionHistory)
+        // {
+        //     Console.Write(action);
+        // }
+        // Console.WriteLine();
+        
+        Console.WriteLine($"Run status: {runResult.RunStatus}");
+        Console.WriteLine($"Number of commands: {result.Count()}");
+        Console.WriteLine("Commands:");
+        Console.WriteLine(result);
+    }
+
+}
+TestShortestCommandSolver();

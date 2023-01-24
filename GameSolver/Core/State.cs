@@ -136,7 +136,7 @@ public sealed class State : ICloneable
             }
             
             var moveAction = new MoveAction(availableMoves[i]);
-            IGameAction action = moveAction.WithInteraction();
+            IGameAction action = new MoveWithInteraction(moveAction);
 
             legalActions.Add(action);
         }

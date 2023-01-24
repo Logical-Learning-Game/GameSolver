@@ -83,11 +83,6 @@ public class MoveAction : IGameAction
         state.PlayerDirection = prevDir;
     }
 
-    public IGameAction WithInteraction()
-    {
-        return new ObserveConditionAction(new CollectAction(new OpenDoorAction(this)));
-    }    
-    
     public override string ToString()
     {
         char ch = ToMove switch

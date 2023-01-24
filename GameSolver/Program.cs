@@ -191,7 +191,7 @@ static void DebugTest()
     //initialState.Update(MoveAction.Right);
     
     initialState.Update(MoveAction.Right);
-    initialState.Update(MoveAction.Up.WithInteraction());
+    initialState.Update(new MoveWithInteraction(MoveAction.Up));
     initialState.Update(MoveAction.Left);
     
     Console.WriteLine(initialState);
@@ -222,10 +222,10 @@ static void TestRunCommand()
     var testState = new State(game);
     
     var startNode = new CommandNode(new NullAction());
-    var node1 = new CommandNode(MoveAction.Right.WithInteraction());
-    var node2 = new CommandNode(MoveAction.Up.WithInteraction());
-    var node3 = new CommandNode(MoveAction.Left.WithInteraction());
-    var node4 = new CommandNode(MoveAction.Right.WithInteraction());
+    var node1 = new CommandNode(new MoveWithInteraction(MoveAction.Right));
+    var node2 = new CommandNode(new MoveWithInteraction(MoveAction.Up));
+    var node3 = new CommandNode(new MoveWithInteraction(MoveAction.Left));
+    var node4 = new CommandNode(new MoveWithInteraction(MoveAction.Right));
 
     startNode.MainBranch = node1;
     node1.MainBranch = node2;

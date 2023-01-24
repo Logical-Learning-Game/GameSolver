@@ -1,19 +1,15 @@
 ﻿namespace GameSolver.Core.Action;
 
-public sealed class CollectAction : MoveAction
+public sealed class CollectAction : MoveActionWrapper
 {
-    private readonly MoveAction _moveAction;
     private bool _isCollected;
     private TileComponent _collectedComponent;
 
-    public CollectAction(MoveAction moveAction) : base(moveAction.ToMove)
-    {
-        _moveAction = moveAction;
-    }
+    public CollectAction(MoveAction moveAction) : base(moveAction) {}
 
     public override void Do(State state)
     {
-        _moveAction.Do(state);
+        base.Do(state);
         
         // Collect some item
         Collect(state);
@@ -24,7 +20,7 @@ public sealed class CollectAction : MoveAction
         // Undo collect some item
         Drop(state);
         
-        _moveAction.Undo(state);
+        base.Undo(state);
     }
     
     private void Collect(State state)

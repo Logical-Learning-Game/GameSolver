@@ -2,15 +2,11 @@
 
 namespace GameSolver.Core.Action;
 
-public sealed class OpenDoorAction : MoveAction
+public sealed class OpenDoorAction : MoveActionWrapper
 {
-    private readonly MoveAction _moveAction;
     private bool _isDoorOpenWithKey;
 
-    public OpenDoorAction(MoveAction moveAction) : base(moveAction.ToMove)
-    {
-        _moveAction = moveAction;
-    }
+    public OpenDoorAction(MoveAction moveAction) : base(moveAction) {}
 
     public override void Do(State state)
     {
@@ -71,12 +67,12 @@ public sealed class OpenDoorAction : MoveAction
             state.Keys--;
         }
 
-        _moveAction.Do(state);
+        base.Do(state);
     }
 
     public override void Undo(State state)
     {
-        _moveAction.Undo(state);
+        base.Undo(state);
         
         // Undo open door with key
         if (_isDoorOpenWithKey)

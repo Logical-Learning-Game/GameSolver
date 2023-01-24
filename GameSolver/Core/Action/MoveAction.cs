@@ -2,7 +2,7 @@
 
 namespace GameSolver.Core.Action;
 
-public sealed class MoveAction : IGameAction
+public class MoveAction : IGameAction
 {
     public static MoveAction Up { get; }
     public static MoveAction Left { get; }
@@ -29,7 +29,7 @@ public sealed class MoveAction : IGameAction
         Right = new MoveAction(Move.Right);
     }
     
-    public void Do(State state)
+    public virtual void Do(State state)
     {
         Vector2Int playerPos = state.PlayerPosition;
         Vector2Int nextPos = state.PlayerPosition;
@@ -56,7 +56,7 @@ public sealed class MoveAction : IGameAction
         state.PlayerDirection = nextDir;
     }
 
-    public void Undo(State state)
+    public virtual void Undo(State state)
     {
         Vector2Int playerPos = state.PlayerPosition;
         Vector2Int prevPos = state.PlayerPosition;
@@ -85,7 +85,7 @@ public sealed class MoveAction : IGameAction
 
     public IGameAction WithInteraction()
     {
-        return new CollectAction(new OpenDoorAction(this));
+        return new ObserveConditionAction(new CollectAction(new OpenDoorAction(this)));
     }    
     
     public override string ToString()

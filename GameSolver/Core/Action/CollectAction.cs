@@ -1,31 +1,30 @@
 ﻿namespace GameSolver.Core.Action;
 
-public sealed class CollectAction : IGameAction
+public sealed class CollectAction : MoveAction
 {
-    private readonly IGameAction _gameAction;
-
+    private readonly MoveAction _moveAction;
     private bool _isCollected;
     private TileComponent _collectedComponent;
 
-    public CollectAction(IGameAction gameAction)
+    public CollectAction(MoveAction moveAction) : base(moveAction.ToMove)
     {
-        _gameAction = gameAction;
+        _moveAction = moveAction;
     }
 
-    public void Do(State state)
+    public override void Do(State state)
     {
-        _gameAction.Do(state);
+        _moveAction.Do(state);
         
         // Collect some item
         Collect(state);
     }
 
-    public void Undo(State state)
+    public override void Undo(State state)
     {
         // Undo collect some item
         Drop(state);
         
-        _gameAction.Undo(state);
+        _moveAction.Undo(state);
     }
     
     private void Collect(State state)
@@ -49,13 +48,6 @@ public sealed class CollectAction : IGameAction
             _collectedComponent = TileComponent.Key;
             state.KeyTiles.RemoveAll(v => v.Equals(playerPos));
             state.Keys++;
-        }
-        else if (TileComponent.Conditional.In(currentTile))
-        {
-            hashIndex = Hash.Condition;
-            _collectedComponent = TileComponent.Conditional;
-            state.ConditionalTiles.RemoveAll(v => v.Equals(playerPos));
-            state.Conditions++;
         }
         else
         {
@@ -90,12 +82,6 @@ public sealed class CollectAction : IGameAction
             state.Keys--;
             state.KeyTiles.Add(playerPos);
         }
-        else if (TileComponent.Conditional.Equals(_collectedComponent))
-        {
-            hashIndex = Hash.Condition;
-            state.Conditions--;
-            state.ConditionalTiles.Add(playerPos);
-        }
         else
         {
             throw new Exception("player is collected item but no tile component is matched");
@@ -103,10 +89,5 @@ public sealed class CollectAction : IGameAction
 
         state.AddComponent(playerPos, _collectedComponent);
         state.UpdateZobristHash(playerPos, hashIndex);
-    }
-
-    public override string ToString()
-    {
-        return _gameAction.ToString()!;
     }
 }

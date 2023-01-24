@@ -2,21 +2,21 @@
 
 namespace GameSolver.Core.Action;
 
-public sealed class OpenDoorAction : IGameAction
+public sealed class OpenDoorAction : MoveAction
 {
     private readonly MoveAction _moveAction;
     private bool _isDoorOpenWithKey;
 
-    public OpenDoorAction(MoveAction moveAction)
+    public OpenDoorAction(MoveAction moveAction) : base(moveAction.ToMove)
     {
         _moveAction = moveAction;
     }
 
-    public void Do(State state)
+    public override void Do(State state)
     {
         // Open door with key
         Vector2Int playerPos = state.PlayerPosition;
-        Move toMove = _moveAction.ToMove;
+        Move toMove = ToMove;
 
         Direction nextDir = toMove switch
         {
@@ -74,7 +74,7 @@ public sealed class OpenDoorAction : IGameAction
         _moveAction.Do(state);
     }
 
-    public void Undo(State state)
+    public override void Undo(State state)
     {
         _moveAction.Undo(state);
         
@@ -82,7 +82,7 @@ public sealed class OpenDoorAction : IGameAction
         if (_isDoorOpenWithKey)
         {
             Vector2Int playerPos = state.PlayerPosition;
-            Move toMove = _moveAction.ToMove;
+            Move toMove = ToMove;
 
             Direction nextDir = toMove switch
             {
@@ -125,10 +125,5 @@ public sealed class OpenDoorAction : IGameAction
 
             state.Keys++;
         }
-    }
-
-    public override string ToString()
-    {
-        return _moveAction.ToString().ToUpper();
     }
 }

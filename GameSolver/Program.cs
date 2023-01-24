@@ -176,6 +176,7 @@ static void DebugTest()
     ";
     
     var game = new Game(boardStr, Direction.Up);
+    var moveActionFactory = new MoveInteractActionFactory();
     var initialState = new State(game);
     Console.WriteLine("board: ");
 
@@ -191,7 +192,7 @@ static void DebugTest()
     //initialState.Update(MoveAction.Right);
     
     initialState.Update(MoveAction.Right);
-    initialState.Update(new MoveWithInteraction(MoveAction.Up));
+    initialState.Update(moveActionFactory.Up());
     initialState.Update(MoveAction.Left);
     
     Console.WriteLine(initialState);
@@ -219,13 +220,14 @@ static void TestRunCommand()
     ";
 
     var game = new Game(boardStr, Direction.Up);
+    var moveActionFactory = new MoveInteractActionFactory();
     var testState = new State(game);
     
     var startNode = new CommandNode(new NullAction());
-    var node1 = new CommandNode(new MoveWithInteraction(MoveAction.Right));
-    var node2 = new CommandNode(new MoveWithInteraction(MoveAction.Up));
-    var node3 = new CommandNode(new MoveWithInteraction(MoveAction.Left));
-    var node4 = new CommandNode(new MoveWithInteraction(MoveAction.Right));
+    var node1 = new CommandNode(moveActionFactory.Right());
+    var node2 = new CommandNode(moveActionFactory.Up());
+    var node3 = new CommandNode(moveActionFactory.Left());
+    var node4 = new CommandNode(moveActionFactory.Right());
 
     startNode.MainBranch = node1;
     node1.MainBranch = node2;
@@ -289,12 +291,12 @@ static void TestShortestCommandSolver()
     ";
     
     const string boardStr5 = @"
-            ....*..xx
-    		.x.x.x.xx
-    		..*...*..
-    		.x.x.x.x.
-    		P.......G
-        ";
+                     ....*..xx
+              		.x.x.x.xx
+              		..*...*..
+              		.x.x.x.x.
+              		P.......G
+                  ";
     
     const string boardStr6 = @"
             P.G
@@ -317,16 +319,19 @@ static void TestShortestCommandSolver()
 
         RunCommandResult runResult = testState.RunCommand(result);
 
-        // foreach (IGameAction action in runResult.ActionHistory)
-        // {
-        //     Console.Write(action);
-        // }
-        // Console.WriteLine();
+        Console.Write("Action do: ");
+        foreach (IGameAction action in runResult.ActionHistory)
+        {
+            Console.Write(action);
+        }
+        Console.WriteLine();
         
         Console.WriteLine($"Run status: {runResult.RunStatus}");
         Console.WriteLine($"Number of commands: {result.Count()}");
         Console.WriteLine("Commands:");
         Console.WriteLine(result);
+        
+        Console.WriteLine(new ObserveConditionAction(new NullAction()));
     }
 
 }

@@ -117,7 +117,8 @@ public sealed class State : ICloneable
             DirectionUtility.RotateBack(PlayerDirection),
             DirectionUtility.RotateRight(PlayerDirection)
         };
-        
+
+        MoveActionFactory moveActionFactory = new MoveInteractActionFactory();
         
         for (int i = 0; i < nextPositions.Length; i++)
         {
@@ -136,7 +137,7 @@ public sealed class State : ICloneable
             }
             
             var moveAction = new MoveAction(availableMoves[i]);
-            IGameAction action = new MoveWithInteraction(moveAction);
+            IGameAction action = moveActionFactory.CreateFrom(moveAction);
 
             legalActions.Add(action);
         }

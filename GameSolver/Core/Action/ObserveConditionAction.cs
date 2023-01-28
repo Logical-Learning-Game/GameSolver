@@ -43,6 +43,16 @@ public sealed class ObserveConditionAction : IGameAction
         _gameAction.Undo(state);
     }
 
+    public bool Equals(IGameAction? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+        
+        return ReferenceEquals(this, other) || other.Equals(_gameAction);
+    }
+
     public override string ToString()
     {
         string? toStringResult = _gameAction.ToString();

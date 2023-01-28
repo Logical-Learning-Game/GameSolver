@@ -25,6 +25,7 @@ public sealed class ShortestCommandSolver
             if (SolveBacktrackingStrategy(0, i))
             {
                 RemoveUnreachableEdge();
+                LoopOptimize();
                 return _startNode;
             }
         }
@@ -269,6 +270,110 @@ public sealed class ShortestCommandSolver
             {
                 exploredSet.Add(node.ConditionalBranch);
                 queue.Enqueue(node.ConditionalBranch);
+            }
+        }
+    }
+
+    private bool NodeInLoopAllEqual(CommandNode node)
+    {
+        CommandNode referencedConditionalNode = node;
+        CommandNode? currentNode = node.MainBranch;
+
+        while (currentNode is not null && currentNode.MainBranch is not null && currentNode.MainBranch != referencedConditionalNode)
+        {
+            if (!currentNode.Action.Equals(currentNode.MainBranch.Action))
+            {
+                return false;
+            }
+            
+            currentNode = currentNode.MainBranch;
+        }
+
+        return true;
+    }
+
+    private IDictionary<CommandNode, int> ReferencedTable()
+    {
+        var result = new Dictionary<CommandNode, int>();
+        
+        IReadOnlyList<CommandNode> allNodes = _startNode.AllNodes();
+
+        foreach (CommandNode node in allNodes)
+        {
+            result[node] = 0;
+        }
+
+        foreach (CommandNode node in allNodes)
+        {
+            if (node.MainBranch is not null)
+            {
+                result[node.MainBranch]++;
+            }
+
+            if (node.ConditionalBranch is not null)
+            {
+                result[node.ConditionalBranch]++;
+            }
+        }
+
+        return result;
+    }
+    
+    private void LoopOptimizeCutNode(CommandNode node)
+    {
+        IDictionary<CommandNode, int> referencedTable = ReferencedTable();
+
+        CommandNode referencedConditionalNode = node;
+        CommandNode? currentNode = node;
+        while (currentNode is not null && currentNode.MainBranch is not null && currentNode.MainBranch != referencedConditionalNode)
+        {
+            CommandNode? nextNode = currentNode.MainBranch;
+            
+            // find referencing node of next node
+            // if more than than 1 and not current node then remove this node
+            if (referencedTable[nextNode] == 1)
+            {
+                currentNode.MainBranch = nextNode.MainBranch;
+            }
+            else
+            {
+                currentNode = currentNode.MainBranch;
+            }
+        }
+    }
+    
+    private void LoopOptimize()
+    {
+        IReadOnlyList<CommandNode> allNodes = _startNode.AllNodes();
+
+        foreach (CommandNode node in allNodes)
+        {
+            if (!node.IsConditionalNode)
+            {
+                continue;
+            }
+
+            CommandNode? currentNode = node;
+            CommandNode conditionalNode = node;
+
+            //TODO Infinite loop potential,must have proper cycle checking mechanism
+            while (currentNode is not null)
+            {
+                currentNode = currentNode.MainBranch;
+
+                if (currentNode != conditionalNode)
+                {
+                    continue;
+                }
+                
+                //cycle occur at conditional node
+                // detect if all action in loop are all equal
+                if (NodeInLoopAllEqual(conditionalNode))
+                {
+                    LoopOptimizeCutNode(conditionalNode);
+                }
+
+                break;
             }
         }
     }

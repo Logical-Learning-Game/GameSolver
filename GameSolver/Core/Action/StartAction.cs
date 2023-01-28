@@ -3,7 +3,7 @@
 public sealed class StartAction : IGameAction
 {
     private readonly ObserveConditionAction _observe;
-    
+
     public StartAction()
     {
         _observe = new ObserveConditionAction(new NullAction());
@@ -17,6 +17,11 @@ public sealed class StartAction : IGameAction
     public void Undo(State state)
     {
         _observe.Undo(state);
+    }
+
+    public bool Equals(IGameAction? other)
+    {
+        return ReferenceEquals(this, other);
     }
 
     public override string ToString()

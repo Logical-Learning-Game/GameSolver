@@ -95,4 +95,9 @@ public class MoveAction : IGameAction
         };
         return ch.ToString();
     }
+
+    public bool Equals(IGameAction? other)
+    {
+        return other is MoveAction moveAction && moveAction.ToMove == ToMove;
+    }
 }

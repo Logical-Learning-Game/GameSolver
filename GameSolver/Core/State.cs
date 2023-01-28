@@ -263,7 +263,7 @@ public sealed class State : ICloneable
 
     public RunCommandResult RunCommand(CommandNode node)
     {
-        var result = new RunCommandResult(null, null, false);
+        var result = new RunCommandResult(false);
 
         CommandNode? currentNode = node;
 
@@ -291,15 +291,20 @@ public sealed class State : ICloneable
             }
             
             // detect cycle in command
-            if (exploredSet.Contains(ZobristHash))
+            if (exploredSet.Contains(ZobristHash) && !currentNode.IsConditionalNode)
             {
                 return result.Fail();
             }
-            
-            if (currentNode.MainBranch is null || Conditions > 0 && !currentNode.ConditionalBranchFilled)
+
+            //TODO maybe have duplicate expansion points
+            if (Conditions > 0)
             {
-                result.CheckpointNode = currentNode;
-                result.StateSnapshot = (State)Clone();
+                result.ExpansionPoints.Add(new Tuple<State, CommandNode>((State)Clone(), currentNode));
+            }
+            else if (currentNode.MainBranch is null)
+            {
+                result.ExpansionPoints.Clear();
+                result.ExpansionPoints.Add(new Tuple<State, CommandNode>((State)Clone(), currentNode));
             }
 
             if (IsSolved())
@@ -309,7 +314,7 @@ public sealed class State : ICloneable
 
             exploredSet.Add(ZobristHash);
 
-            if (Conditions > 0 && currentNode.ConditionalBranch is not null)
+            if (Conditions > 0 && currentNode.ConditionalBranch is not null && currentNode.IsConditionalNode)
             {
                 currentNode = currentNode.ConditionalBranch;
                 Conditions--;

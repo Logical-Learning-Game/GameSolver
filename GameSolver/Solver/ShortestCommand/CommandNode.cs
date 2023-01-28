@@ -11,6 +11,7 @@ public sealed class CommandNode
     public bool ConditionalBranchFilled { get; set; }
     public bool MainBranchReachable { get; set; }
     public bool ConditionalBranchReachable { get; set; }
+    public bool IsConditionalNode { get; set; }
 
     public CommandNode(
         IGameAction action, 
@@ -18,7 +19,8 @@ public sealed class CommandNode
         CommandNode? conditionalBranch = null, 
         bool conditionalBranchFilled = false, 
         bool mainBranchReachable = false, 
-        bool conditionalBranchReachable = false
+        bool conditionalBranchReachable = false,
+        bool isConditionalNode = false
         )
     {
         Action = action;
@@ -27,6 +29,7 @@ public sealed class CommandNode
         ConditionalBranchFilled = conditionalBranchFilled;
         MainBranchReachable = mainBranchReachable;
         ConditionalBranchReachable = conditionalBranchReachable;
+        IsConditionalNode = isConditionalNode;
     }
 
     public IReadOnlyList<CommandNode> AllNodes()
@@ -103,7 +106,7 @@ public sealed class CommandNode
         for (int i = 0; i < commandNodePositions.Count; i++)
         {
             CommandNode node = commandNodePositions[i];
-            
+
             if (node.MainBranch is not null)
             {
                 int mainIndex = invertIndexLookup[node.MainBranch];
@@ -111,16 +114,16 @@ public sealed class CommandNode
                 if (node.ConditionalBranch is not null)
                 {
                     int conditionalIndex = invertIndexLookup[node.ConditionalBranch];
-                    strBuilder.AppendLine($"{i + 1}.{node.Action} -> if (Condition A) then {conditionalIndex + 1} else {mainIndex + 1}");
+                    strBuilder.AppendLine($"{i + 1}. if (Condition A) then {conditionalIndex + 1} else {mainIndex + 1}");
                 }
                 else
                 {
-                    strBuilder.AppendLine($"{i + 1}.{node.Action} -> {mainIndex + 1}");
+                    strBuilder.AppendLine($"{i + 1}. {node.Action} -> {mainIndex + 1}");
                 }
             }
             else
             {
-                strBuilder.AppendLine($"{i + 1}.{node.Action}");
+                strBuilder.AppendLine($"{i + 1}. {node.Action}");
             }
         }
         

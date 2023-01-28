@@ -49,100 +49,103 @@ public sealed class ShortestCommandSolver
             return true;
         }
 
-        if (runResult.StateSnapshot is null || runResult.CheckpointNode is null)
+        foreach (Tuple<State, CommandNode> expansionPoint in runResult.ExpansionPoints)
         {
-            return false;
-        }
-        
-        CommandNode nodeToFill = runResult.CheckpointNode;
-        State stateSnapshot = runResult.StateSnapshot;
-        
-        // Ignore edge to child of this nodeToFill and it self
-        var exceptNodes = new HashSet<CommandNode> {nodeToFill};
-
-        if (nodeToFill.MainBranch is not null)
-        {
-            exceptNodes.Add(nodeToFill.MainBranch);
-        }
-
-        if (nodeToFill.ConditionalBranch is not null)
-        {
-            exceptNodes.Add(nodeToFill.ConditionalBranch);
-        }
-
-        List<CommandNode> existCommandNodes = ExistCommandNodes(_startNode, exceptNodes).ToList();
-        List<CommandNode> legalCommandNodes = LegalNewCommandNodes(stateSnapshot).ToList();
-        //existCommandNodes.AddRange(legalCommandNodes);
-
-        // conditional branch
-        if (stateSnapshot.Conditions > 0 && nodeToFill != _startNode && !nodeToFill.ConditionalBranchFilled)
-        {
-            nodeToFill.ConditionalBranchFilled = true;
+            State stateSnapshot = expansionPoint.Item1;
+            CommandNode nodeToFill = expansionPoint.Item2;
             
-            foreach (CommandNode command in existCommandNodes)
+            // Ignore edge to child of this nodeToFill and it self
+            var exceptNodes = new HashSet<CommandNode> {nodeToFill};
+
+            if (nodeToFill.MainBranch is not null)
             {
-                nodeToFill.ConditionalBranch = command;
-
-                if (SolveBacktrackingStrategy(depth, limit))
-                {
-                    if (nodeToFill.MainBranch is null && nodeToFill.ConditionalBranch is not null)
-                    {
-                        nodeToFill.MainBranch = nodeToFill.ConditionalBranch;
-                        nodeToFill.ConditionalBranch = null;
-                    }
-                    return true;
-                }
-
-                nodeToFill.ConditionalBranch = null;
+                exceptNodes.Add(nodeToFill.MainBranch);
+            }
+        
+            if (nodeToFill.ConditionalBranch is not null)
+            {
+                exceptNodes.Add(nodeToFill.ConditionalBranch);
             }
             
-            foreach (CommandNode command in legalCommandNodes)
+            List<CommandNode> existCommandNodes = ExistCommandNodes(_startNode, exceptNodes).ToList();
+            List<CommandNode> legalCommandNodes = LegalNewCommandNodes(stateSnapshot).ToList();
+            
+            
+            // conditional branch at conditional node
+            if (stateSnapshot.Conditions > 0)
             {
-                nodeToFill.ConditionalBranch = command;
-
-                if (SolveBacktrackingStrategy(depth + 1, limit))
+                //add intermediate conditional node
+                var intermediateConditionalNode = new CommandNode(new NullAction(), isConditionalNode:true)
                 {
-                    if (nodeToFill.MainBranch is null && nodeToFill.ConditionalBranch is not null)
+                    MainBranch = nodeToFill.MainBranch
+                };
+                nodeToFill.MainBranch = intermediateConditionalNode;
+                
+                foreach (CommandNode command in existCommandNodes)
+                {
+                    intermediateConditionalNode.ConditionalBranch = command;
+
+                    if (SolveBacktrackingStrategy(depth + 1, limit))
                     {
-                        nodeToFill.MainBranch = nodeToFill.ConditionalBranch;
-                        nodeToFill.ConditionalBranch = null;
+                        if (intermediateConditionalNode.MainBranch is null && intermediateConditionalNode.ConditionalBranch is not null)
+                        {
+                            nodeToFill.MainBranch = intermediateConditionalNode.ConditionalBranch;
+                        }
+                        return true;
                     }
-                    return true;
+
+                    intermediateConditionalNode.ConditionalBranch = null;
                 }
 
-                nodeToFill.ConditionalBranch = null;
+                foreach (CommandNode command in legalCommandNodes)
+                {
+                    intermediateConditionalNode.ConditionalBranch = command;
+
+                    if (SolveBacktrackingStrategy(depth + 2, limit))
+                    {
+                        if (intermediateConditionalNode.MainBranch is null && intermediateConditionalNode.ConditionalBranch is not null)
+                        {
+                            nodeToFill.MainBranch = intermediateConditionalNode.ConditionalBranch;
+                        }
+                        return true;
+                    }
+
+                    intermediateConditionalNode.ConditionalBranch = null;
+                }
+                
+                // remove intermediate conditional node
+                nodeToFill.MainBranch = intermediateConditionalNode.MainBranch;
+            }
+            // main branch
+            else if (nodeToFill.MainBranch is null)
+            {
+                foreach (CommandNode command in existCommandNodes)
+                {
+                    // try fill main branch first
+                    nodeToFill.MainBranch = command;
+                    
+                    if (SolveBacktrackingStrategy(depth, limit))
+                    {
+                        return true;
+                    }
+
+                    nodeToFill.MainBranch = null;
+                }
+
+                foreach (CommandNode command in legalCommandNodes)
+                {
+                    nodeToFill.MainBranch = command;
+                    
+                    if (SolveBacktrackingStrategy(depth + 1, limit))
+                    {
+                        return true;
+                    }
+
+                    nodeToFill.MainBranch = null;
+                }
             }
         }
         
-        // main branch
-        else if (nodeToFill.MainBranch is null)
-        {
-            foreach (CommandNode command in existCommandNodes)
-            {
-                // try fill main branch first
-                nodeToFill.MainBranch = command;
-                
-                if (SolveBacktrackingStrategy(depth, limit))
-                {
-                    return true;
-                }
-
-                nodeToFill.MainBranch = null;
-            }
-
-            foreach (CommandNode command in legalCommandNodes)
-            {
-                nodeToFill.MainBranch = command;
-                
-                if (SolveBacktrackingStrategy(depth + 1, limit))
-                {
-                    return true;
-                }
-
-                nodeToFill.MainBranch = null;
-            }
-        }
-
         return false;
     }
 

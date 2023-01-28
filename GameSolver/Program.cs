@@ -356,8 +356,6 @@ static void TestShortestCommandSolver()
         Console.WriteLine($"Number of commands: {result.Count()}");
         Console.WriteLine("Commands:");
         Console.WriteLine(result);
-        
-        Console.WriteLine(new ObserveConditionAction(new NullAction()));
     }
 
 }

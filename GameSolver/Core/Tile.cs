@@ -108,31 +108,43 @@ public readonly struct TileComponent : IEquatable<TileComponent>, IEquatable<int
     public static TileComponent DoorRight { get; }
     public static TileComponent DoorRightOpen { get; }
     public static TileComponent Conditional { get; }
+    public static TileComponent ConditionalA { get; }
+    public static TileComponent ConditionalB { get; }
+    public static TileComponent ConditionalC { get; }
+    public static TileComponent ConditionalD { get; }
+    public static TileComponent ConditionalE { get; }
 
     public int Value { get; }
+    public int Mask { get; }
 
-    public TileComponent(int value)
+    public TileComponent(int value, int mask)
     {
         Value = value;
+        Mask = mask;
     }
 
     static TileComponent()
     {
-        Player = new TileComponent(1 << 0);
-        Floor = new TileComponent(1 << 1);
-        Wall = new TileComponent(1 << 2);
-        Score = new TileComponent(1 << 3);
-        Key = new TileComponent(1 << 4);
-        Goal = new TileComponent(1 << 5);
-        DoorUp = new TileComponent(1 << 6);
-        DoorUpOpen = new TileComponent(1 << 7);
-        DoorLeft = new TileComponent(1 << 8);
-        DoorLeftOpen = new TileComponent(1 << 9);
-        DoorDown = new TileComponent(1 << 10);
-        DoorDownOpen = new TileComponent(1 << 11);
-        DoorRight = new TileComponent(1 << 12);
-        DoorRightOpen = new TileComponent(1 << 13);
-        Conditional = new TileComponent(1 << 14);
+        Player = new TileComponent(1 << 0, 1 << 0);
+        Floor = new TileComponent(1 << 1, 1 << 1);
+        Wall = new TileComponent(1 << 2, 1 << 2);
+        Score = new TileComponent(1 << 3, 1 << 3);
+        Key = new TileComponent(1 << 4, 1 << 4);
+        Goal = new TileComponent(1 << 5, 1 << 5);
+        DoorUp = new TileComponent(1 << 6, 1 << 6);
+        DoorUpOpen = new TileComponent(1 << 7, 1 << 7);
+        DoorLeft = new TileComponent(1 << 8, 1 << 8);
+        DoorLeftOpen = new TileComponent(1 << 9, 1 << 9);
+        DoorDown = new TileComponent(1 << 10, 1 << 10);
+        DoorDownOpen = new TileComponent(1 << 11, 1 << 11);
+        DoorRight = new TileComponent(1 << 12, 1 << 12);
+        DoorRightOpen = new TileComponent(1 << 13, 1 << 13);
+        Conditional = new TileComponent(0b111 << 14, 0b111 << 14);
+        ConditionalA = new TileComponent(0b001 << 14, 0b111 << 14);
+        ConditionalB = new TileComponent(0b010 << 14, 0b111 << 14);
+        ConditionalC = new TileComponent(0b011 << 14, 0b111 << 14);
+        ConditionalD = new TileComponent(0b100 << 14, 0b111 << 14);
+        ConditionalE = new TileComponent(0b101 << 14, 0b111 << 14);
     }
 
     public static IReadOnlyCollection<TileComponent> AllComponents()
@@ -140,7 +152,8 @@ public readonly struct TileComponent : IEquatable<TileComponent>, IEquatable<int
         return new[]
         {
             Player, Floor, Wall, Score, Key, Goal, DoorUp, DoorUpOpen, DoorDown, DoorDownOpen,
-            DoorLeft, DoorLeftOpen, DoorRight, DoorRightOpen, Conditional
+            DoorLeft, DoorLeftOpen, DoorRight, DoorRightOpen, Conditional, ConditionalA, ConditionalB,
+            ConditionalC, ConditionalD, ConditionalE
         };
     }
     
@@ -154,12 +167,22 @@ public readonly struct TileComponent : IEquatable<TileComponent>, IEquatable<int
         return Equals(DoorUp) || Equals(DoorLeft) || Equals(DoorDown) || Equals(DoorRight);
     }
     
-    public static bool Have(int tile, TileComponent component)
+    public static bool In(TileComponent component, int tile)
     {
         return component.In(tile);
     }
 
     public bool In(int tile)
+    {
+        return (tile & Mask) == Value;
+    }
+
+    public static bool Any(TileComponent component, int tile)
+    {
+        return component.Any(tile);
+    }
+    
+    public bool Any(int tile)
     {
         return (tile & Value) > 0;
     }

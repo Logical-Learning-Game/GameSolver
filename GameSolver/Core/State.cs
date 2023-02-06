@@ -14,7 +14,7 @@ public sealed class State : ICloneable
     public List<Vector2Int> DoorTiles { get; }
     public List<Vector2Int> ConditionalTiles { get; }
     public int Keys { get; set; }
-    public int Conditions { get; set; }
+    public ConditionalType Condition { get; set; }
     public Direction PlayerDirection { get; set; }
     public int[,] Board { get; }
     public long ZobristHash { get; set; }
@@ -31,13 +31,13 @@ public sealed class State : ICloneable
         DoorTiles = game.DoorTiles.ToList();
         ConditionalTiles = game.ConditionalTiles.ToList();
         Keys = game.Keys;
-        Conditions = game.Conditions;
+        Condition = game.Condition;
         ZobristHash = CalculateZobristHash(game.HashComponent);
         Game = game;
     }
 
     private State(Vector2Int playerPosition, Vector2Int goalTile, List<Vector2Int> scoreTiles,
-        List<Vector2Int> keyTiles, List<Vector2Int> conditionalTiles, int conditions,
+        List<Vector2Int> keyTiles, List<Vector2Int> conditionalTiles, ConditionalType condition,
         int keys, List<Vector2Int> doorTiles, Direction playerDirection, int[,] board, long zobristHash, Game game)
     {
         PlayerPosition = playerPosition;
@@ -51,7 +51,7 @@ public sealed class State : ICloneable
         KeyTiles = keyTiles ?? throw new ArgumentNullException(nameof(keyTiles), "key tiles should not be null");
         ConditionalTiles = conditionalTiles ?? throw new ArgumentNullException(nameof(conditionalTiles), "conditional tiles should not be null");
         Keys = keys;
-        Conditions = conditions;
+        Condition = condition;
         DoorTiles = doorTiles ?? throw new ArgumentNullException(nameof(doorTiles), "door tiles should not be null");
     }
 
@@ -62,7 +62,7 @@ public sealed class State : ICloneable
         var copyDoorTiles = new List<Vector2Int>(DoorTiles);
         var copyConditionalTiles = new List<Vector2Int>(ConditionalTiles);
         var copyBoard = (int[,]) Board.Clone();
-        return new State(PlayerPosition, GoalTile, copyScoreTiles, copyKeyTiles, copyConditionalTiles, Conditions, Keys, copyDoorTiles, PlayerDirection,
+        return new State(PlayerPosition, GoalTile, copyScoreTiles, copyKeyTiles, copyConditionalTiles, Condition, Keys, copyDoorTiles, PlayerDirection,
             copyBoard, ZobristHash, Game);
     }
 
@@ -261,6 +261,60 @@ public sealed class State : ICloneable
         return position.Y < 0 || position.X < 0 || position.Y > height - 1 || position.X > width - 1;
     }
 
+    // public RunCommandResultV2 RunCommandV2(IExecutable node)
+    // {
+    //     var result = new RunCommandResultV2(null, null, false);
+    //     var commandExecutor = new CommandExecutor(this);
+    //
+    //     IExecutable? currentNode = node;
+    //     
+    //     var exploredSet = new HashSet<long>();
+    //
+    //     while (currentNode is not null)
+    //     {
+    //         try
+    //         {
+    //             currentNode.ExecuteWith(commandExecutor);
+    //         }
+    //         catch (IndexOutOfRangeException)
+    //         {
+    //             return result.Fail();
+    //         }
+    //         
+    //         // validate player position after update the state
+    //         bool validPlayerPos = CheckPassableTile(PlayerPosition);
+    //         bool isDoor = IsDoor(PlayerPosition, PlayerDirection, out bool isDoorOpen);
+    //         
+    //         if (isDoor && !isDoorOpen || !isDoor && isDoorOpen || !validPlayerPos)
+    //         {
+    //             return result.Fail();
+    //         }
+    //         
+    //         // detect cycle in command
+    //         if (exploredSet.Contains(ZobristHash))
+    //         {
+    //             return result.Fail();
+    //         }
+    //         
+    //         if (currentNode.IsCheckpoint(commandExecutor))
+    //         {
+    //             result.CheckpointNode = currentNode;
+    //             result.StateSnapshot = (State)Clone();
+    //         }
+    //         
+    //         if (IsSolved())
+    //         {
+    //             return result.Success();
+    //         }
+    //         
+    //         exploredSet.Add(ZobristHash);
+    //
+    //         currentNode = currentNode.Next(commandExecutor);
+    //     }
+    //
+    //     return result.Fail();
+    // }
+    
     public RunCommandResult RunCommand(CommandNode node)
     {
         var result = new RunCommandResult(false);
@@ -297,7 +351,7 @@ public sealed class State : ICloneable
             }
 
             //TODO maybe have duplicate expansion points
-            if (Conditions > 0)
+            if (Condition != ConditionalType.None)
             {
                 result.ExpansionPoints.Add(new Tuple<State, CommandNode>((State)Clone(), currentNode));
             }
@@ -314,10 +368,15 @@ public sealed class State : ICloneable
 
             exploredSet.Add(ZobristHash);
 
-            if (Conditions > 0 && currentNode.ConditionalBranch is not null && currentNode.IsConditionalNode)
+            if (
+                Condition != ConditionalType.None && 
+                currentNode.ConditionalType == Condition && 
+                currentNode.ConditionalBranch is not null && 
+                currentNode.IsConditionalNode
+                )
             {
                 currentNode = currentNode.ConditionalBranch;
-                Conditions--;
+                Condition = ConditionalType.None;
             }
             else
             {

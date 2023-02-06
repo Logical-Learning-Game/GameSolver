@@ -1,10 +1,12 @@
-﻿namespace GameSolver.Core.Action;
+﻿using GameSolver.Solver.ShortestCommand;
+
+namespace GameSolver.Core.Action;
 
 public sealed class ObserveConditionAction : IGameAction
 {
     private readonly IGameAction _gameAction;
     private bool _isObserved;
-    private bool _haveOldCondition;
+    private ConditionalType _oldCondition;
 
     public ObserveConditionAction(IGameAction gameAction)
     {
@@ -18,16 +20,31 @@ public sealed class ObserveConditionAction : IGameAction
         Vector2Int playerPos = state.PlayerPosition;
         int currentTile = state.Board[playerPos.Y, playerPos.X];
 
-        if (TileComponent.Conditional.In(currentTile))
+        if (TileComponent.Conditional.Any(currentTile))
         {
             _isObserved = true;
+            _oldCondition = state.Condition;
 
-            if (state.Conditions == 1)
+            if (TileComponent.ConditionalA.In(currentTile))
             {
-                _haveOldCondition = true;
+                state.Condition = ConditionalType.ConditionalA;
             }
-            
-            state.Conditions = 1;
+            else if (TileComponent.ConditionalB.In(currentTile))
+            {
+                state.Condition = ConditionalType.ConditionalB;
+            }
+            else if (TileComponent.ConditionalC.In(currentTile))
+            {
+                state.Condition = ConditionalType.ConditionalC;
+            }
+            else if (TileComponent.ConditionalD.In(currentTile))
+            {
+                state.Condition = ConditionalType.ConditionalD;
+            }
+            else if (TileComponent.ConditionalE.In(currentTile))
+            {
+                state.Condition = ConditionalType.ConditionalE;
+            }
         }
     }
 
@@ -38,7 +55,7 @@ public sealed class ObserveConditionAction : IGameAction
             return;
         }
 
-        state.Conditions = _haveOldCondition ? 1 : 0;
+        state.Condition = _oldCondition;
 
         _gameAction.Undo(state);
     }

@@ -73,10 +73,10 @@ public sealed class ShortestCommandSolver
             
             
             // conditional branch at conditional node
-            if (stateSnapshot.Conditions > 0)
+            if (stateSnapshot.Condition != ConditionalType.None)
             {
                 //add intermediate conditional node
-                var intermediateConditionalNode = new CommandNode(new NullAction(), isConditionalNode:true)
+                var intermediateConditionalNode = new CommandNode(new NullAction(), conditionalType:stateSnapshot.Condition, isConditionalNode:true)
                 {
                     MainBranch = nodeToFill.MainBranch
                 };
@@ -118,7 +118,7 @@ public sealed class ShortestCommandSolver
                 nodeToFill.MainBranch = intermediateConditionalNode.MainBranch;
             }
             // main branch
-            else if (nodeToFill.MainBranch is null)
+            if (nodeToFill.MainBranch is null)
             {
                 foreach (CommandNode command in existCommandNodes)
                 {
@@ -223,11 +223,16 @@ public sealed class ShortestCommandSolver
                 return;
             }
             
-            if (state.Conditions > 0 && currentNode.ConditionalBranch is not null)
+            if (
+                state.Condition != ConditionalType.None && 
+                currentNode.ConditionalType == state.Condition && 
+                currentNode.ConditionalBranch is not null &&
+                currentNode.IsConditionalNode
+                )
             {
                 currentNode.ConditionalBranchReachable = true;
                 currentNode = currentNode.ConditionalBranch;
-                state.Conditions--;
+                state.Condition = ConditionalType.None;
             }
             else
             {

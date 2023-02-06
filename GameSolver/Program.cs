@@ -60,9 +60,9 @@ static void TestNewGame()
     const string boardStr = @"
         ....*..xx
 		.x.x.x.xx
-		..*.k.*.d
+		..*.k.*.D
 		.x.x.x.x.
-		P.....r.G
+		P.....R.G
     ";
 
     /*
@@ -80,13 +80,21 @@ static void TestNewGame()
         .x.x.x.x.x.xx
         ....*.k.*..xx
         .x.x.x.x.x.xx
-        ..*.......*.d
+        ..*.......*.D
         .x.x.x.x.x.x.
-        P.........r.G
+        P.........R.G
     ";
 
-    var game = new Game(boardStr, Direction.Up);
-    var initialState = new State(game);
+    const string boardStr3 = @"
+        *x..G
+        .*.xx
+        .x*..
+        .*...
+        Px*x*
+    ";
+    
+    var gameBuilder = new GameBuilder(boardStr3, Direction.Up);
+    var initialState = new State(gameBuilder.Instance);
     Console.WriteLine("board: ");
 
     Console.WriteLine(initialState);
@@ -94,7 +102,7 @@ static void TestNewGame()
     
     var watch = Stopwatch.StartNew();
     
-    var solver = new BreadthFirstSearch(game);
+    var solver = new BreadthFirstSearch(gameBuilder.Instance);
     IEnumerable<IGameAction> result = solver.Solve();
     
     watch.Stop();
@@ -139,12 +147,12 @@ static void TestAllSolution()
         P...........G
     ";
     
-    var game = new Game(boardStr, Direction.Up);
+    var gameBuilder = new GameBuilder(boardStr, Direction.Up);
     Console.WriteLine("Board:");
-    Console.WriteLine(game);
+    Console.WriteLine(gameBuilder.Instance);
     Console.WriteLine("Solutions:");
 
-    var dfsSolver = new DepthFirstSearch(game, 16);
+    var dfsSolver = new DepthFirstSearch(gameBuilder.Instance, 16);
     IReadOnlyList<IReadOnlyList<IGameAction>> results = dfsSolver.SolveAllSolutionStrategy();
     
     for (int i = 0; i < results.Count; i++)
@@ -175,9 +183,9 @@ static void DebugTest()
         P.*
     ";
     
-    var game = new Game(boardStr, Direction.Up);
+    var gameBuilder = new GameBuilder(boardStr, Direction.Up);
     var moveActionFactory = new MoveInteractActionFactory();
-    var initialState = new State(game);
+    var initialState = new State(gameBuilder.Instance);
     Console.WriteLine("board: ");
 
     Console.WriteLine(initialState);
@@ -219,9 +227,9 @@ static void TestRunCommand()
         P.c
     ";
 
-    var game = new Game(boardStr, Direction.Up);
+    var gameBuilder = new GameBuilder(boardStr, Direction.Up);
     var moveActionFactory = new MoveInteractActionFactory();
-    var testState = new State(game);
+    var testState = new State(gameBuilder.Instance);
     
     var startNode = new CommandNode(new NullAction());
     var node1 = new CommandNode(moveActionFactory.Right());
@@ -234,7 +242,7 @@ static void TestRunCommand()
     node2.MainBranch = node3;
     node3.MainBranch = node4;
 
-    var shortestCmdSolver = new ShortestCommandSolver(game, 5);
+    var shortestCmdSolver = new ShortestCommandSolver(gameBuilder.Instance, 5);
     
     var watch = Stopwatch.StartNew();
 
@@ -277,16 +285,16 @@ static void TestShortestCommandSolver()
     
     const string boardStr3 = @"
         ....G
-        ....c
+        ....e
         .x...
-        ..c..
+        ..e..
         Px...
     ";
     
     const string boardStr4 = @"
-        G.c..
+        G.b..
         xx...
-        ..c..
+        ..b..
         Px...
     ";
     
@@ -314,7 +322,7 @@ static void TestShortestCommandSolver()
     const string boardStr8 = @"
         .....
         .....
-        G.c..
+        G.a..
         .x...
         .x...
         ..P..
@@ -328,10 +336,10 @@ static void TestShortestCommandSolver()
         ..P..
     ";
 
-    var game = new Game(boardStr4, Direction.Up);
-    var solver = new ShortestCommandSolver(game, 20);
+    var gameBuilder = new GameBuilder(boardStr8, Direction.Up);
+    var solver = new ShortestCommandSolver(gameBuilder.Instance, 20);
     Console.WriteLine("Board:");
-    Console.WriteLine(game);
+    Console.WriteLine(gameBuilder.Instance);
     
     CommandNode? result = solver.Solve();
 
@@ -341,7 +349,7 @@ static void TestShortestCommandSolver()
     }
     else
     {
-        var testState = new State(game);
+        var testState = new State(gameBuilder.Instance);
 
         RunCommandResult runResult = testState.RunCommand(result);
 
@@ -360,3 +368,103 @@ static void TestShortestCommandSolver()
 
 }
 TestShortestCommandSolver();
+
+static void TestRandomAndSolveMap()
+{
+    Console.WriteLine("Test Random and solve map");
+    
+    const string boardStr1 = @"
+        ....G
+        .....
+        .....
+        .....
+        P....
+    ";
+
+    var random = new Random();
+
+    int maxItem = 3;
+    int maxObstacle = 5;
+    int randomIteration = 10;
+    
+
+    for (int iteration = 0; iteration < randomIteration; iteration++)
+    {
+        var gameBuilder = new GameBuilder(boardStr1, Direction.Up);
+        Game game = gameBuilder.Instance;
+        int boardHeight = game.Board.GetLength(0);
+        int boardWidth = game.Board.GetLength(1);
+        
+        var occupiedPositions = new List<Vector2Int>
+        {
+            game.StartPlayerTile,
+            game.GoalTile
+        };
+        
+        // random obstacle positions
+        for (int i = 0; i < maxObstacle; i++)
+        {
+            Vector2Int position;
+            do
+            {
+                int randX = random.Next(0, boardWidth);
+                int randY = random.Next(0, boardHeight);
+                position = new Vector2Int(randX, randY);
+
+            } while (occupiedPositions.Contains(position));
+        
+            occupiedPositions.Add(position);
+            gameBuilder.AddItem(position, TileComponent.Wall.Value);
+        }
+
+        // random item positions
+        for (int j = 0; j < maxItem; j++)
+        {
+            Vector2Int position;
+            do
+            {
+                int randX = random.Next(0, boardWidth);
+                int randY = random.Next(0, boardHeight);
+                position = new Vector2Int(randX, randY);
+            } while (occupiedPositions.Contains(position));
+            
+            occupiedPositions.Add(position);
+            gameBuilder.AddItem(position, TileComponent.Score.Value);
+        }
+    
+        gameBuilder.Build();
+
+        // solve with shortest command and shortest path
+        var shortestCommandSolver = new ShortestCommandSolver(gameBuilder.Instance, 30);
+        var shortestActionSolver = new BreadthFirstSearch(gameBuilder.Instance);
+
+        var shortestActionResult = shortestActionSolver.Solve();
+        if (shortestActionResult.Count == 0)
+        {
+            continue;
+        }
+        
+        var shortestCommandResult = shortestCommandSolver.Solve();
+        
+
+        if (shortestCommandResult is not null)
+        {
+            Console.WriteLine("Random map:");
+            Console.WriteLine(gameBuilder.Instance);
+            
+            Console.WriteLine("Shortest Command Result:");
+            Console.WriteLine($"Number of commands: {shortestCommandResult.Count()}");
+            Console.WriteLine("Commands:");
+            Console.WriteLine(shortestCommandResult);
+    
+            Console.WriteLine("Shortest Action Result:");
+            Console.WriteLine($"Number of actions: {shortestActionResult.Count}");
+            Utility.PrintList(shortestActionResult);
+            
+            Console.WriteLine("-----------------------------------------------------");
+        }
+    }
+    
+    Console.WriteLine("Finish");
+}
+//TestRandomAndSolveMap();

@@ -22,7 +22,8 @@ public sealed class SolverBenchmark
     public SolverBenchmark(int n)
     {
         _n = n;
-        var game = new Game(Map1, Direction.Up);
+        var gameBuilder = new GameBuilder(Map1, Direction.Up);
+        var game = gameBuilder.Instance;
         
         _solvers = new IShortestPathSolver[]
         {

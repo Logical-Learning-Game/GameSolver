@@ -1,4 +1,5 @@
-﻿using GameSolver.Solver.ShortestCommand;
+﻿using System.ComponentModel.Design.Serialization;
+using GameSolver.Solver.ShortestCommand;
 
 namespace GameSolver.Core;
 
@@ -29,16 +30,63 @@ public sealed class GameBuilder
         return this;
     }
 
-    public GameBuilder AddDoor(Vector2Int position, Direction direction)
+    public static void AddDoor(int[,] board, int x, int y, DoorType doorType, Direction doorDirection, bool isOpen)
     {
+        int door = TileComponent.CreateDoor(doorType, doorDirection, isOpen);
+        int doorPair = TileComponent.CreateDoor(doorType, DirectionUtility.RotateBack(doorDirection), isOpen);
+        
+        if (doorDirection == Direction.Up)
+        {
+            board[y, x] |= door;
+            if (!GameUtility.OutOfBoundCheck(board, x, y - 1))
+            {
+                board[y - 1, x] |= doorPair;
+            }
+        }
+        else if (doorDirection == Direction.Right)
+        {
+            board[y, x] |= door;
+            if (!GameUtility.OutOfBoundCheck(board, x + 1, y))
+            {
+                board[y, x + 1] |= doorPair;
+            }
+        }
+        else if (doorDirection == Direction.Down)
+        {
+            board[y, x] |= door;
+            if (!GameUtility.OutOfBoundCheck(board, x, y + 1))
+            {
+                board[y + 1, x] |= doorPair;
+            }
+        }
+        else if (doorDirection == Direction.Left)
+        {
+            board[y, x] |= door;
+            if (!GameUtility.OutOfBoundCheck(board, x - 1, y))
+            {
+                board[y, x - 1] |= doorPair;
+            }
+        }
+    }
+    
+    public GameBuilder AddDoor(Vector2Int position, DoorType doorType, Direction doorDirection, bool isOpen)
+    {
+        return AddDoor(position.X, position.Y, doorType, doorDirection, isOpen);
+    }
+
+    public GameBuilder AddDoor(int x, int y, DoorType doorType, Direction doorDirection, bool isOpen)
+    {
+        AddDoor(Instance.Board, x, y, doorType, doorDirection, isOpen);
+        
+        var position = new Vector2Int(x, y);
+        if (!Instance.DoorTiles.Contains(position))
+        {
+            Instance.DoorTiles.Add(position);
+        }
+        
         return this;
     }
 
-    public void Build()
-    {
-        Instance.HashComponent = CreateZobristHashComponent(Instance.Board);
-    }
-    
     public void Clear()
     {
         Instance = new Game();
@@ -71,26 +119,15 @@ public sealed class GameBuilder
 
                     if (component.IsDoorLink())
                     {
-                        if (component.Equals(TileComponent.DoorUp))
+                        Direction doorDirection = tileChar switch
                         {
-                            boardMatrix[i, j] |= TileComponent.DoorUp.Value + TileComponent.Floor.Value;
-                            boardMatrix[i - 1, j] |= TileComponent.DoorDown.Value + TileComponent.Floor.Value;
-                        }
-                        else if (component.Equals(TileComponent.DoorLeft))
-                        {
-                            boardMatrix[i, j] |= TileComponent.DoorLeft.Value + TileComponent.Floor.Value;
-                            boardMatrix[i, j - 1] |= TileComponent.DoorRight.Value + TileComponent.Floor.Value;
-                        }
-                        else if (component.Equals(TileComponent.DoorDown))
-                        {
-                            boardMatrix[i, j] |= TileComponent.DoorDown.Value + TileComponent.Floor.Value;
-                            boardMatrix[i + 1, j] |= TileComponent.DoorUp.Value + TileComponent.Floor.Value;
-                        }
-                        else if (component.Equals(TileComponent.DoorRight))
-                        {
-                            boardMatrix[i, j] |= TileComponent.DoorRight.Value + TileComponent.Floor.Value;
-                            boardMatrix[i, j + 1] |= TileComponent.DoorUp.Value + TileComponent.Floor.Value;
-                        }
+                            'U' => Direction.Up,
+                            'R' => Direction.Right,
+                            'D' => Direction.Down,
+                            'L' => Direction.Left,
+                            _ => throw new ArgumentOutOfRangeException(nameof(tileChar), tileChar, "tile character out of range")
+                        };
+                        AddDoor(boardMatrix, j, i, DoorType.DoorA, doorDirection, false);
                     }
                     else
                     {
@@ -129,7 +166,7 @@ public sealed class GameBuilder
                 {
                     scores.Add(new Vector2Int(j, i));
                 }
-                else if (TileComponent.Key.In(tile))
+                else if (TileComponent.KeyA.In(tile) || TileComponent.KeyB.In(tile) || TileComponent.KeyC.In(tile))
                 {
                     keys.Add(new Vector2Int(j, i));
                 }
@@ -159,7 +196,9 @@ public sealed class GameBuilder
         Instance.ScoreTiles = scores.ToList();
         Instance.KeyTiles = keys.ToList();
         Instance.ConditionalTiles = conditions.ToList();
-        Instance.Keys = 0;
+        Instance.KeysA = 0;
+        Instance.KeysB = 0;
+        Instance.KeysC = 0;
         Instance.Condition = ConditionalType.None;
         Instance.DoorTiles = doors.ToList();
         Instance.GoalTile = goalTile.Value;
@@ -175,12 +214,14 @@ public sealed class GameBuilder
             '.' => TileComponent.Floor,
             'x' => TileComponent.Wall,
             '*' => TileComponent.Score,
-            'k' => TileComponent.Key,
+            '1' => TileComponent.KeyA,
+            '2' => TileComponent.KeyB,
+            '3' => TileComponent.KeyC,
             'G' => TileComponent.Goal,
-            'U' => TileComponent.DoorUp,
-            'L' => TileComponent.DoorLeft,
-            'D' => TileComponent.DoorDown,
-            'R' => TileComponent.DoorRight,
+            'U' => TileComponent.DoorUpA,
+            'L' => TileComponent.DoorLeftA,
+            'D' => TileComponent.DoorDownA,
+            'R' => TileComponent.DoorRightA,
             'a' => TileComponent.ConditionalA,
             'b' => TileComponent.ConditionalB,
             'c' => TileComponent.ConditionalC,

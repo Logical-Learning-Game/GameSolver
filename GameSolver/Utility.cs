@@ -1,4 +1,4 @@
-﻿namespace GameSolver.Utility;
+﻿namespace GameSolver;
 
 public static class Utility
 {
@@ -6,5 +6,5 @@ public static class Utility
     {
         string s = string.Join("", list);
         Console.WriteLine(s);
-    } 
+    }
 }

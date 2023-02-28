@@ -38,12 +38,26 @@ public sealed class CollectAction : MoveActionWrapper
             _collectedComponent = TileComponent.Score;
             state.ScoreTiles.RemoveAll(v => v.Equals(playerPos));
         }
-        else if (TileComponent.Key.In(currentTile))
+        else if (TileComponent.KeyA.In(currentTile))
         {
             hashIndex = Hash.Key;
-            _collectedComponent = TileComponent.Key;
+            _collectedComponent = TileComponent.KeyA;
             state.KeyTiles.RemoveAll(v => v.Equals(playerPos));
-            state.Keys++;
+            state.KeysA++;
+        }
+        else if (TileComponent.KeyB.In(currentTile))
+        {
+            hashIndex = Hash.Key;
+            _collectedComponent = TileComponent.KeyB;
+            state.KeyTiles.RemoveAll(v => v.Equals(playerPos));
+            state.KeysB++;
+        }
+        else if (TileComponent.KeyC.In(currentTile))
+        {
+            hashIndex = Hash.Key;
+            _collectedComponent = TileComponent.KeyC;
+            state.KeyTiles.RemoveAll(v => v.Equals(playerPos));
+            state.KeysC++;
         }
         else
         {
@@ -72,10 +86,22 @@ public sealed class CollectAction : MoveActionWrapper
             hashIndex = Hash.Score;
             state.ScoreTiles.Add(playerPos);
         }
-        else if (TileComponent.Key.Equals(_collectedComponent))
+        else if (TileComponent.KeyA.Equals(_collectedComponent))
         {
             hashIndex = Hash.Key;
-            state.Keys--;
+            state.KeysA--;
+            state.KeyTiles.Add(playerPos);
+        }
+        else if (TileComponent.KeyB.Equals(_collectedComponent))
+        {
+            hashIndex = Hash.Key;
+            state.KeysB--;
+            state.KeyTiles.Add(playerPos);
+        }
+        else if (TileComponent.KeyC.Equals(_collectedComponent))
+        {
+            hashIndex = Hash.Key;
+            state.KeysC--;
             state.KeyTiles.Add(playerPos);
         }
         else

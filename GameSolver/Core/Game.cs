@@ -11,7 +11,9 @@ public sealed class Game
     // Player
     public Vector2Int StartPlayerTile { get; set; }
     public Direction StartPlayerDirection { get; set; }
-    public int Keys { get; set; }
+    public int KeysA { get; set; }
+    public int KeysB { get; set; }
+    public int KeysC { get; set; }
     public ConditionalType Condition { get; set; }
 
 
@@ -76,56 +78,61 @@ public sealed class Game
     {
         char ch;
         
-        if (TileComponent.HaveDoorLink(tile))
+        if (TileComponent.Player.In(tile))
+        {
+            ch = 'P';
+        }
+        else if (TileComponent.Goal.In(tile))
+        {
+            ch = 'G';
+        }
+        else if (TileComponent.Score.In(tile))
+        {
+            ch = '*';
+        }
+        else if (TileComponent.KeyA.In(tile))
+        {
+            ch = '1';
+        }
+        else if (TileComponent.KeyB.In(tile))
+        {
+            ch = '2';
+        }
+        else if (TileComponent.KeyC.In(tile))
+        {
+            ch = '3';
+        }
+        else if (TileComponent.Wall.In(tile))
+        {
+            ch = 'x';
+        }
+        else if (TileComponent.ConditionalA.In(tile))
+        {
+            ch = 'a';
+        }
+        else if (TileComponent.ConditionalB.In(tile))
+        {
+            ch = 'b';
+        }
+        else if (TileComponent.ConditionalC.In(tile))
+        {
+            ch = 'c';
+        }
+        else if (TileComponent.ConditionalD.In(tile))
+        {
+            ch = 'd';
+        }
+        else if (TileComponent.ConditionalE.In(tile))
+        {
+            ch = 'e';
+        }
+        else if (TileComponent.HaveDoorLink(tile))
         {
             ch = 'D';
         }
         else
         {
-            if (TileComponent.Player.In(tile))
-            {
-                ch = 'P';
-            }
-            else if (TileComponent.Goal.In(tile))
-            {
-                ch = 'G';
-            }
-            else if (TileComponent.Score.In(tile))
-            {
-                ch = '*';
-            }
-            else if (TileComponent.Key.In(tile))
-            {
-                ch = 'k';
-            }
-            else if (TileComponent.Wall.In(tile))
-            {
-                ch = 'x';
-            }
-            else if (TileComponent.ConditionalA.In(tile))
-            {
-                ch = 'a';
-            }
-            else if (TileComponent.ConditionalB.In(tile))
-            {
-                ch = 'b';
-            }
-            else if (TileComponent.ConditionalC.In(tile))
-            {
-                ch = 'c';
-            }
-            else if (TileComponent.ConditionalD.In(tile))
-            {
-                ch = 'd';
-            }
-            else if (TileComponent.ConditionalE.In(tile))
-            {
-                ch = 'e';
-            }
-            else
-            {
-                ch = '.';
-            }
+            ch = '.';
         }
 
         return ch;

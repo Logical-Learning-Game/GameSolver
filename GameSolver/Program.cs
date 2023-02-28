@@ -9,7 +9,7 @@ using GameSolver.Core.Action;
 using GameSolver.Solver;
 using GameSolver.Solver.ShortestCommand;
 using GameSolver.Solver.ShortestPath;
-using GameSolver.Utility;
+using GameSolver;
 
 
 static void TestPatternEncoder()
@@ -336,10 +336,134 @@ static void TestShortestCommandSolver()
         ..P..
     ";
 
-    var gameBuilder = new GameBuilder(boardStr8, Direction.Up);
-    var solver = new ShortestCommandSolver(gameBuilder.Instance, 20);
+    const string boardStr10 = @"
+        21xxx
+        P...G
+    ";
+
+    const string boardStr11 = @"
+        P.R.G
+    ";
+    var board11 = new GameBuilder(boardStr11, Direction.Up);
+    // board11.AddDoor(2, 1,DoorType.DoorA, Direction.Right, false);
+    // board11.AddDoor(3, 1,DoorType.DoorB, Direction.Right, false);
+    
+    // ---------------- final map set -----------------------
+    const string boardStr12 = @"
+        x.x
+        x.G
+        x.x
+        x.x
+        xPx
+    ";
+    var board12 = new GameBuilder(boardStr12, Direction.Up);
+
+    const string boardStr13 = @"
+        ....G
+        .x1..
+        ...x.
+        P....
+    ";
+    var board13 = new GameBuilder(boardStr13, Direction.Up);
+    board13.AddDoor(3, 0, DoorType.DoorA, Direction.Right, false);
+    board13.AddDoor(4, 1, DoorType.DoorA, Direction.Up, false);
+
+    const string boardStr14 = @"
+        ....
+        .xx.
+        Pxx.
+        ..a1
+        xxGx
+    ";
+    var board14 = new GameBuilder(boardStr14, Direction.Up);
+    board14.AddDoor(2, 4, DoorType.DoorA, Direction.Up, false);
+
+    const string boardStr15 = @"
+        ....
+        a.ax
+        .x.x
+        Gx.P
+    ";
+    var board15 = new GameBuilder(boardStr15, Direction.Left);
+    
+    const string boardStr16 = @"
+        .xx
+        aGx
+        .xx
+        .xx
+        Pxx
+    ";
+    var board16 = new GameBuilder(boardStr16, Direction.Up);
+
+    const string boardStr17 = @"
+        P...
+        xx..
+        .xx.
+        a...
+        Gxxx
+    ";
+    var board17 = new GameBuilder(boardStr17, Direction.Up);
+    
+    const string boardStr18 = @"
+        ....*..xx
+        .x.x.x.xx
+        ..*...*..
+        .x.x.x.x.
+        P.......G
+    ";
+    var board18 = new GameBuilder(boardStr18, Direction.Up);
+    
+    const string boardStr19 = @"
+        .a.b.a
+        a.b.b.
+        .a.G1a
+        Pxb.b.
+    ";
+    var board19 = new GameBuilder(boardStr19, Direction.Up);
+    board19.AddDoor(3, 2, DoorType.DoorA, Direction.Up, false);
+    board19.AddDoor(3, 2, DoorType.DoorA, Direction.Right, false);
+    board19.AddDoor(3, 2, DoorType.DoorA, Direction.Down, false);
+    board19.AddDoor(3, 2, DoorType.DoorA, Direction.Left, false);
+    
+    const string boardStr20 = @"
+        a..b
+        G.x.
+        xx..
+        P..a
+    ";
+    var board20 = new GameBuilder(boardStr20, Direction.Right);
+    
+    const string boardStr21 = @"
+        .a.b.a
+        a.b.b.
+        .a.G1a
+        Pxb.b.
+    ";
+    var board21 = new GameBuilder(boardStr21, Direction.Up);
+    board21.AddDoor(3, 2, DoorType.DoorA, Direction.Up, false);
+    board21.AddDoor(3, 2, DoorType.DoorA, Direction.Right, false);
+    board21.AddDoor(3, 2, DoorType.DoorA, Direction.Down, false);
+    board21.AddDoor(3, 2, DoorType.DoorA, Direction.Left, false);
+    
+    const string boardStr22 = @"
+        accxabcde
+        PabcdeexG
+    ";
+    var board22 = new GameBuilder(boardStr22, Direction.Right);
+    
+    const string boardStr23 = @"
+        .......
+        .xxxxG.
+        .a...b.
+        ..x....
+        .Px....
+    ";
+    var board23 = new GameBuilder(boardStr23, Direction.Up);
+    
+    var game = board16.Instance;
+    var solver = new ShortestCommandSolver(game, 9);
     Console.WriteLine("Board:");
-    Console.WriteLine(gameBuilder.Instance);
+    Console.WriteLine(game);
     
     CommandNode? result = solver.Solve();
 
@@ -349,10 +473,11 @@ static void TestShortestCommandSolver()
     }
     else
     {
-        var testState = new State(gameBuilder.Instance);
+        var testState = new State(game);
 
         RunCommandResult runResult = testState.RunCommand(result);
 
+        Console.WriteLine($"Number of actions: {runResult.ActionHistory.Count - 1}");
         Console.Write("Action do: ");
         foreach (IGameAction action in runResult.ActionHistory)
         {
@@ -431,8 +556,6 @@ static void TestRandomAndSolveMap()
             occupiedPositions.Add(position);
             gameBuilder.AddItem(position, TileComponent.Score.Value);
         }
-    
-        gameBuilder.Build();
 
         // solve with shortest command and shortest path
         var shortestCommandSolver = new ShortestCommandSolver(gameBuilder.Instance, 30);

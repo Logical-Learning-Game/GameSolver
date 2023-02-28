@@ -3,7 +3,7 @@ using GameSolver.Core.Action;
 
 namespace GameSolver.Solver.ShortestCommand;
 
-public sealed class CommandNode
+public sealed class CommandNode : ICloneable
 {
     public IGameAction Action { get; set; }
     public CommandNode? MainBranch { get; set; }
@@ -33,6 +33,11 @@ public sealed class CommandNode
         MainBranchReachable = mainBranchReachable;
         ConditionalBranchReachable = conditionalBranchReachable;
         IsConditionalNode = isConditionalNode;
+    }
+
+    public CommandNode()
+    {
+        Action = new NullAction();
     }
 
     public IReadOnlyList<CommandNode> AllNodes()
@@ -143,5 +148,54 @@ public sealed class CommandNode
         }
         
         return strBuilder.ToString();
+    }
+
+    public CommandNode CloneAll()
+    {
+        IReadOnlyList<CommandNode> allNodes = AllNodes();
+        
+        var newAllNodes = new List<CommandNode>();
+        foreach (CommandNode node in allNodes)
+        {
+            newAllNodes.Add((CommandNode)node.Clone());
+        }
+
+        var invertedIndexLookup = new Dictionary<CommandNode, int>();
+        for (int i = 0; i < allNodes.Count; i++)
+        {
+            invertedIndexLookup.Add(allNodes[i], i);
+        }
+
+        foreach (CommandNode node in newAllNodes)
+        {
+            if (node.MainBranch is not null)
+            {
+                int index = invertedIndexLookup[node.MainBranch];
+                node.MainBranch = newAllNodes[index];
+            }
+
+            if (node.ConditionalBranch is not null)
+            {
+                int index = invertedIndexLookup[node.ConditionalBranch];
+                node.ConditionalBranch = newAllNodes[index];
+            }
+        }
+
+        return newAllNodes[0];
+    }
+
+    public object Clone()
+    {
+        return new CommandNode
+        {
+            Action = Action,
+            MainBranch = MainBranch,
+            ConditionalBranch = ConditionalBranch,
+            ConditionalType = ConditionalType,
+            ConditionalBranchFilled = ConditionalBranchFilled,
+            MainBranchReachable = MainBranchReachable,
+            ConditionalBranchReachable = ConditionalBranchReachable,
+            IsConditionalNode = IsConditionalNode
+        };
     }
 }

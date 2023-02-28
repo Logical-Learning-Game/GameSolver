@@ -4,7 +4,8 @@ namespace GameSolver.Core.Action;
 
 public sealed class OpenDoorAction : MoveActionWrapper
 {
-    private bool _isDoorOpenWithKey;
+    private bool _isDoorOpen;
+    private DoorType _doorType;
 
     public OpenDoorAction(MoveAction moveAction) : base(moveAction) {}
 
@@ -25,11 +26,13 @@ public sealed class OpenDoorAction : MoveActionWrapper
 
         Vector2Int directionVector = DirectionUtility.DirectionToVector2(nextDir);
         Vector2Int nextPosition = Vector2Int.Sum(playerPos, directionVector);
-        bool isDoor = state.IsDoor(nextPosition, nextDir, out bool isDoorOpen);
+        bool isDoor = state.IsDoor(nextPosition, nextDir, out bool isDoorOpen, out DoorType doorType);
 
         if (isDoor && !isDoorOpen)
         {
-            if (state.Keys == 0)
+            if (doorType == DoorType.DoorA && state.KeysA == 0 ||
+                doorType == DoorType.DoorB && state.KeysB == 0 ||
+                doorType == DoorType.DoorC && state.KeysC == 0)
             {
                 throw new Exception("don't have key to open the closed door");
             }
@@ -62,9 +65,21 @@ public sealed class OpenDoorAction : MoveActionWrapper
             state.AddComponent(nextPosition, doorPairDir);
             state.UpdateZobristHash(nextPosition, doorPairHash);
 
-            _isDoorOpenWithKey = true;
-            
-            state.Keys--;
+            _isDoorOpen = true;
+            _doorType = doorType;
+
+            switch (doorType)
+            {
+                case DoorType.DoorA:
+                    state.KeysA--;
+                    break;
+                case DoorType.DoorB:
+                    state.KeysB--;
+                    break;
+                case DoorType.DoorC:
+                    state.KeysC--;
+                    break;
+            }
         }
 
         base.Do(state);
@@ -75,7 +90,7 @@ public sealed class OpenDoorAction : MoveActionWrapper
         base.Undo(state);
         
         // Undo open door with key
-        if (_isDoorOpenWithKey)
+        if (_isDoorOpen)
         {
             Vector2Int playerPos = state.PlayerPosition;
             Move toMove = ToMove;
@@ -119,7 +134,18 @@ public sealed class OpenDoorAction : MoveActionWrapper
             state.RemoveComponent(doorPairPos, doorPairDir);
             state.UpdateZobristHash(doorPairPos, doorPairHash);
 
-            state.Keys++;
+            switch (_doorType)
+            {
+                case DoorType.DoorA:
+                    state.KeysA++;
+                    break;
+                case DoorType.DoorB:
+                    state.KeysB++;
+                    break;
+                case DoorType.DoorC:
+                    state.KeysC++;
+                    break;
+            }
         }
     }
 }

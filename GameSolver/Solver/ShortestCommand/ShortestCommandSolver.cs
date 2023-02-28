@@ -25,8 +25,15 @@ public sealed class ShortestCommandSolver
             if (SolveBacktrackingStrategy(0, i))
             {
                 RemoveUnreachableEdge();
-                LoopOptimize();
-                return _startNode;
+
+                CommandNode copyStartNode = _startNode.CloneAll();
+                LoopOptimize(copyStartNode);
+                
+                // If test run is passed then return optimized solution
+                var cloneState = (State)_initialState.Clone();
+                RunCommandResult runResult = cloneState.RunCommand(copyStartNode);
+
+                return runResult.RunStatus ? copyStartNode : _startNode;
             }
         }
         
@@ -297,11 +304,11 @@ public sealed class ShortestCommandSolver
         return true;
     }
 
-    private IDictionary<CommandNode, int> ReferencedTable()
+    private IDictionary<CommandNode, int> ReferencedTable(CommandNode startNode)
     {
         var result = new Dictionary<CommandNode, int>();
         
-        IReadOnlyList<CommandNode> allNodes = _startNode.AllNodes();
+        IReadOnlyList<CommandNode> allNodes = startNode.AllNodes();
 
         foreach (CommandNode node in allNodes)
         {
@@ -324,12 +331,12 @@ public sealed class ShortestCommandSolver
         return result;
     }
     
-    private void LoopOptimizeCutNode(CommandNode node)
+    private void LoopOptimizeCutNode(CommandNode startNode, CommandNode cutNode)
     {
-        IDictionary<CommandNode, int> referencedTable = ReferencedTable();
+        IDictionary<CommandNode, int> referencedTable = ReferencedTable(startNode);
 
-        CommandNode referencedConditionalNode = node;
-        CommandNode? currentNode = node;
+        CommandNode referencedConditionalNode = cutNode;
+        CommandNode? currentNode = cutNode;
         while (currentNode is not null && currentNode.MainBranch is not null && currentNode.MainBranch != referencedConditionalNode)
         {
             CommandNode? nextNode = currentNode.MainBranch;
@@ -347,9 +354,9 @@ public sealed class ShortestCommandSolver
         }
     }
     
-    private void LoopOptimize()
+    private void LoopOptimize(CommandNode startNode)
     {
-        IReadOnlyList<CommandNode> allNodes = _startNode.AllNodes();
+        IReadOnlyList<CommandNode> allNodes = startNode.AllNodes();
 
         foreach (CommandNode node in allNodes)
         {
@@ -362,23 +369,27 @@ public sealed class ShortestCommandSolver
             CommandNode conditionalNode = node;
 
             //TODO Infinite loop potential,must have proper cycle checking mechanism
+            var visitedNode = new HashSet<CommandNode>();
             while (currentNode is not null)
             {
-                currentNode = currentNode.MainBranch;
-
-                if (currentNode != conditionalNode)
+                if (visitedNode.Contains(currentNode))
                 {
-                    continue;
+                    if (currentNode == conditionalNode)
+                    {
+                        //cycle occur at conditional node
+                        // detect if all action in loop are all equal
+                        if (NodeInLoopAllEqual(conditionalNode))
+                        {
+                            LoopOptimizeCutNode(startNode,conditionalNode);
+                        }
+                    }
+                    
+                    break;
                 }
+
+                visitedNode.Add(currentNode);
                 
-                //cycle occur at conditional node
-                // detect if all action in loop are all equal
-                if (NodeInLoopAllEqual(conditionalNode))
-                {
-                    LoopOptimizeCutNode(conditionalNode);
-                }
-
-                break;
+                currentNode = currentNode.MainBranch;
             }
         }
     }

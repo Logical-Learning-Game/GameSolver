@@ -1,26 +1,29 @@
 ﻿using System.ComponentModel;
 using GameSolver.Core.Action;
+using GameSolver.Solver.ShortestCommand;
 
 namespace GameSolver.Core;
 
 public sealed class State : ICloneable
 {
     public Vector2Int PlayerPosition { get; set; }
-    public Vector2Int GoalTile { get; } 
+    public Vector2Int GoalTile { get; }
     public List<Vector2Int> ScoreTiles { get; }
     public List<Vector2Int> KeyTiles { get; }
     public List<Vector2Int> DoorTiles { get; }
     public List<Vector2Int> ConditionalTiles { get; }
-    public int Keys { get; set; }
-    public int Conditions { get; set; }
+    public int KeysA { get; set; }
+    public int KeysB { get; set; }
+    public int KeysC { get; set; }
+    public ConditionalType Condition { get; set; }
     public Direction PlayerDirection { get; set; }
     public int[,] Board { get; }
     public long ZobristHash { get; set; }
     public Game Game { get; }
-        
+    
     public State(Game game)
     {
-        Board = (int[,])game.Board.Clone();
+        Board = (int[,]) game.Board.Clone();
         PlayerPosition = game.StartPlayerTile;
         PlayerDirection = game.StartPlayerDirection;
         GoalTile = game.GoalTile;
@@ -28,25 +31,44 @@ public sealed class State : ICloneable
         KeyTiles = game.KeyTiles.ToList();
         DoorTiles = game.DoorTiles.ToList();
         ConditionalTiles = game.ConditionalTiles.ToList();
-        Keys = game.Keys;
-        Conditions = game.Conditions;
+        KeysA = game.KeysA;
+        KeysB = game.KeysB;
+        KeysC = game.KeysC;
+        Condition = game.Condition;
         ZobristHash = CalculateZobristHash(game.HashComponent);
         Game = game;
     }
 
-    private State(Vector2Int playerPosition, Vector2Int goalTile, List<Vector2Int> scoreTiles, List<Vector2Int> keyTiles,
-        int keys, List<Vector2Int> doorTiles, Direction playerDirection, int[,] board, long zobristHash, Core.Game game)
+    private State(Vector2Int playerPosition, Vector2Int goalTile, List<Vector2Int> scoreTiles,
+        List<Vector2Int> keyTiles, List<Vector2Int> conditionalTiles, ConditionalType condition,
+        int keysA, int keysB, int keysC, List<Vector2Int> doorTiles, Direction playerDirection, int[,] board, long zobristHash, Game game)
     {
         PlayerPosition = playerPosition;
         GoalTile = goalTile;
-        ScoreTiles = scoreTiles ?? throw new ArgumentNullException(nameof(scoreTiles), "score tiles should not be null");
+        ScoreTiles = scoreTiles ??
+                     throw new ArgumentNullException(nameof(scoreTiles), "score tiles should not be null");
         PlayerDirection = playerDirection;
         Board = board ?? throw new ArgumentNullException(nameof(board), "board should not be null");
         ZobristHash = zobristHash;
         Game = game ?? throw new ArgumentNullException(nameof(game), "game should not be null");
-        KeyTiles = keyTiles ?? throw new ArgumentNullException(nameof(keyTiles), "key tiles should not be null");;
-        Keys = keys;
+        KeyTiles = keyTiles ?? throw new ArgumentNullException(nameof(keyTiles), "key tiles should not be null");
+        ConditionalTiles = conditionalTiles ?? throw new ArgumentNullException(nameof(conditionalTiles), "conditional tiles should not be null");
+        KeysA = keysA;
+        KeysB = keysB;
+        KeysC = keysC;
+        Condition = condition;
         DoorTiles = doorTiles ?? throw new ArgumentNullException(nameof(doorTiles), "door tiles should not be null");
+    }
+
+    public object Clone()
+    {
+        var copyScoreTiles = new List<Vector2Int>(ScoreTiles);
+        var copyKeyTiles = new List<Vector2Int>(KeyTiles);
+        var copyDoorTiles = new List<Vector2Int>(DoorTiles);
+        var copyConditionalTiles = new List<Vector2Int>(ConditionalTiles);
+        var copyBoard = (int[,]) Board.Clone();
+        return new State(PlayerPosition, GoalTile, copyScoreTiles, copyKeyTiles, copyConditionalTiles, Condition, KeysA, KeysB, KeysC, copyDoorTiles, PlayerDirection,
+            copyBoard, ZobristHash, Game);
     }
 
     public bool IsSolved()
@@ -62,7 +84,7 @@ public sealed class State : ICloneable
         action.Do(copyThisState);
         return copyThisState;
     }
-        
+
     public void Update(IGameAction action)
     {
         action.Do(this);
@@ -100,7 +122,8 @@ public sealed class State : ICloneable
             DirectionUtility.RotateBack(PlayerDirection),
             DirectionUtility.RotateRight(PlayerDirection)
         };
-        
+
+        MoveActionFactory moveActionFactory = new MoveInteractActionFactory();
         
         for (int i = 0; i < nextPositions.Length; i++)
         {
@@ -112,43 +135,21 @@ public sealed class State : ICloneable
                 continue;
             }
             
-            bool isDoor = IsDoor(nextPos, playerDirections[i], out bool doorOpen);
-            if (isDoor && !doorOpen && Keys == 0)
+            bool isDoor = IsDoor(nextPos, playerDirections[i], out bool doorOpen, out DoorType doorType);
+            if (isDoor && !doorOpen)
             {
-                continue;
+                if (doorType == DoorType.DoorA && KeysA == 0 ||
+                    doorType == DoorType.DoorB && KeysB == 0 ||
+                    doorType == DoorType.DoorC && KeysC == 0)
+                {
+                    continue;
+                }
             }
             
             var moveAction = new MoveAction(availableMoves[i]);
-            
-            int nextTile = Board[nextPos.Y, nextPos.X];
-            
-            bool isScore = TileComponent.Score.In(nextTile);
-            bool isKey = TileComponent.Key.In(nextTile);
+            IGameAction action = moveActionFactory.CreateFrom(moveAction);
 
-            if (isScore || isKey)
-            {
-                IGameAction action;
-                
-                if (isScore)
-                {
-                    action = new CollectAction(moveAction, TileComponent.Score);
-                }
-                else
-                {
-                    action = new CollectAction(moveAction, TileComponent.Key);
-                }
-                
-                legalActions.Add(action);
-            }
-            else if (isDoor && !doorOpen && Keys > 0)
-            {
-                IGameAction action = new OpenDoorAction(moveAction);
-                legalActions.Add(action);
-            }
-            else
-            {
-                legalActions.Add(moveAction);
-            }
+            legalActions.Add(action);
         }
         
         return legalActions;
@@ -156,32 +157,24 @@ public sealed class State : ICloneable
 
     public void AddComponent(Vector2Int tilePosition, TileComponent component)
     {
+        RemoveComponent(tilePosition, component);
         Board[tilePosition.Y, tilePosition.X] |= component.Value;
     }
 
     public void RemoveComponent(Vector2Int tilePosition, TileComponent component)
     {
-        Board[tilePosition.Y, tilePosition.X] &= ~component.Value;
+        Board[tilePosition.Y, tilePosition.X] &= ~component.Mask;
     }
-    
+
     public void UpdateZobristHash(Vector2Int position, int hashIndex)
     {
         int position1d = Game.ToOneDimension(position);
         ZobristHash ^= Game.HashComponent[position1d, hashIndex];
     }
-    
+
     public override string ToString()
     {
         return Game.BoardToString(Board);
-    }
-
-    public object Clone()
-    {
-        var copyScoreTiles = new List<Vector2Int>(ScoreTiles);
-        var copyKeyTiles = new List<Vector2Int>(KeyTiles);
-        var copyDoorTiles = new List<Vector2Int>(DoorTiles);
-        var copyBoard = (int[,])Board.Clone();
-        return new State(PlayerPosition, GoalTile, copyScoreTiles, copyKeyTiles, Keys, copyDoorTiles, PlayerDirection, copyBoard, ZobristHash, Game);
     }
 
     private long CalculateZobristHash(long[,] hashComponent)
@@ -210,12 +203,6 @@ public sealed class State : ICloneable
             hash ^= hashComponent[door1DPos, Hash.DoorRight];
         }
 
-        foreach (Vector2Int tile in ConditionalTiles)
-        {
-            int conditional1DPos = Game.ToOneDimension(tile.Y, tile.X, boardWidth);
-            hash ^= hashComponent[conditional1DPos, Hash.Condition];
-        }
-
         Vector2Int playerPos = PlayerPosition;
         int player1DPos = Game.ToOneDimension(playerPos.Y, playerPos.X, boardWidth);
 
@@ -226,7 +213,7 @@ public sealed class State : ICloneable
         return hash;
     }
 
-    public bool IsDoor(Vector2Int position, Direction inboundDirection, out bool doorOpen)
+    public bool IsDoor(Vector2Int position, Direction inboundDirection, out bool doorOpen, out DoorType doorType)
     {
         Tuple<TileComponent, TileComponent> doorDirToBlock = inboundDirection switch
         {
@@ -248,10 +235,89 @@ public sealed class State : ICloneable
         {
             doorOpen = isOpen.In(currentTile);
         }
-
+        
+        // Determine door type
+        doorType = DoorType.DoorNoKey;
+        if (dirToBlock.Equals(TileComponent.DoorUp))
+        {
+            if (TileComponent.DoorUpNokey.In(currentTile))
+            {
+                doorType = DoorType.DoorNoKey;
+            }
+            else if (TileComponent.DoorUpA.In(currentTile))
+            {
+                doorType = DoorType.DoorA;
+            }
+            else if (TileComponent.DoorUpB.In(currentTile))
+            {
+                doorType = DoorType.DoorB;
+            }
+            else if (TileComponent.DoorUpC.In(currentTile))
+            {
+                doorType = DoorType.DoorC;
+            }
+        }
+        else if (dirToBlock.Equals(TileComponent.DoorRight))
+        {
+            if (TileComponent.DoorRightNokey.In(currentTile))
+            {
+                doorType = DoorType.DoorNoKey;
+            }
+            else if (TileComponent.DoorRightA.In(currentTile))
+            {
+                doorType = DoorType.DoorA;
+            }
+            else if (TileComponent.DoorRightB.In(currentTile))
+            {
+                doorType = DoorType.DoorB;
+            }
+            else if (TileComponent.DoorRightC.In(currentTile))
+            {
+                doorType = DoorType.DoorC;
+            }
+        }
+        else if (dirToBlock.Equals(TileComponent.DoorDown))
+        {
+            if (TileComponent.DoorDownNokey.In(currentTile))
+            {
+                doorType = DoorType.DoorNoKey;
+            }
+            else if (TileComponent.DoorDownA.In(currentTile))
+            {
+                doorType = DoorType.DoorA;
+            }
+            else if (TileComponent.DoorDownB.In(currentTile))
+            {
+                doorType = DoorType.DoorB;
+            }
+            else if (TileComponent.DoorDownC.In(currentTile))
+            {
+                doorType = DoorType.DoorC;
+            }
+        }
+        else if (dirToBlock.Equals(TileComponent.DoorLeft))
+        {
+            if (TileComponent.DoorLeftNokey.In(currentTile))
+            {
+                doorType = DoorType.DoorNoKey;
+            }
+            else if (TileComponent.DoorLeftA.In(currentTile))
+            {
+                doorType = DoorType.DoorA;
+            }
+            else if (TileComponent.DoorLeftB.In(currentTile))
+            {
+                doorType = DoorType.DoorB;
+            }
+            else if (TileComponent.DoorLeftC.In(currentTile))
+            {
+                doorType = DoorType.DoorC;
+            }
+        }
+        
         return isDoor;
     }
-    
+
     public bool CheckPassableTile(Vector2Int position)
     {
         if (OutOfBoundCheck(position))
@@ -274,8 +340,95 @@ public sealed class State : ICloneable
 
     public bool OutOfBoundCheck(Vector2Int position)
     {
-        int height = Board.GetLength(0);
-        int width = Board.GetLength(1);
-        return position.Y < 0 || position.X < 0 || position.Y > height - 1 || position.X > width - 1;
+        return GameUtility.OutOfBoundCheck(Board, position.X, position.Y);
+    }
+
+    public RunCommandResult RunCommand(CommandNode node)
+    {
+        var result = new RunCommandResult(false);
+
+        CommandNode? currentNode = node;
+
+        var stateExploredSet = new HashSet<long>();
+        var commandNodeExploredSet = new HashSet<CommandNode>();
+        
+        while (currentNode is not null)
+        {
+            try
+            {
+                result.ActionHistory.Add(currentNode.Action);
+                result.CommandHistory.Add(currentNode);
+                Update(currentNode.Action);
+            }
+            catch (Exception)
+            {
+                return result.Fail();
+            }
+
+            // validate player position after update the state because move action doesn't throw any error if it failed
+            bool validPlayerPos = CheckPassableTile(PlayerPosition);
+            if (!validPlayerPos)
+            {
+                return result.Fail();
+            }
+            
+            // detect cycle in command
+            if (stateExploredSet.Contains(ZobristHash))
+            {
+                // to detect cycle in conditional node
+                if (currentNode.IsConditionalNode)
+                {
+                    if (commandNodeExploredSet.Contains(currentNode))
+                    {
+                        return result.Fail();
+                    }
+                    
+                    commandNodeExploredSet.Add(currentNode);
+                }
+                else
+                {
+                    return result.Fail();
+                }
+            }
+            else
+            {
+                commandNodeExploredSet.Clear();
+            }
+
+            //TODO maybe have duplicate expansion points
+            if (Condition != ConditionalType.None)
+            {
+                result.ExpansionPoints.Add(new Tuple<State, CommandNode>((State)Clone(), currentNode));
+            }
+            else if (currentNode.MainBranch is null)
+            {
+                result.ExpansionPoints.Clear();
+                result.ExpansionPoints.Add(new Tuple<State, CommandNode>((State)Clone(), currentNode));
+            }
+
+            if (IsSolved())
+            {
+                return result.Success();
+            }
+
+            stateExploredSet.Add(ZobristHash);
+
+            if (
+                Condition != ConditionalType.None && 
+                currentNode.ConditionalType == Condition && 
+                currentNode.ConditionalBranch is not null && 
+                currentNode.IsConditionalNode
+                )
+            {
+                currentNode = currentNode.ConditionalBranch;
+                Condition = ConditionalType.None;
+            }
+            else
+            {
+                currentNode = currentNode.MainBranch;
+            }
+        }
+
+        return result.Fail();
     }
 }

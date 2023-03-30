@@ -29,7 +29,7 @@ public class MoveAction : IGameAction
         Right = new MoveAction(Move.Right);
     }
     
-    public void Do(State state)
+    public virtual void Do(State state)
     {
         Vector2Int playerPos = state.PlayerPosition;
         Vector2Int nextPos = state.PlayerPosition;
@@ -56,7 +56,7 @@ public class MoveAction : IGameAction
         state.PlayerDirection = nextDir;
     }
 
-    public void Undo(State state)
+    public virtual void Undo(State state)
     {
         Vector2Int playerPos = state.PlayerPosition;
         Vector2Int prevPos = state.PlayerPosition;
@@ -94,5 +94,10 @@ public class MoveAction : IGameAction
             _ => throw new InvalidEnumArgumentException(nameof(ToMove), (int)ToMove, ToMove.GetType())
         };
         return ch.ToString();
+    }
+
+    public bool Equals(IGameAction? other)
+    {
+        return other is MoveAction moveAction && moveAction.ToMove == ToMove;
     }
 }

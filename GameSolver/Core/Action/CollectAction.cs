@@ -1,102 +1,115 @@
 ﻿namespace GameSolver.Core.Action;
 
-public class CollectAction : IGameAction
+public sealed class CollectAction : MoveActionWrapper
 {
-    private readonly MoveAction _moveAction;
-    private readonly TileComponent _component;
+    private bool _isCollected;
+    private TileComponent _collectedComponent;
 
-    public CollectAction(MoveAction moveAction, TileComponent component)
-    {
-        _moveAction = moveAction;
-        _component = component;
-    }
+    public CollectAction(MoveAction moveAction) : base(moveAction) {}
 
-    public void Do(State state)
+    public override void Do(State state)
     {
-        _moveAction.Do(state);
+        base.Do(state);
         
         // Collect some item
-        Collect(state, _component);
+        Collect(state);
     }
 
-    public void Undo(State state)
+    public override void Undo(State state)
     {
         // Undo collect some item
-        Drop(state, _component);
+        Drop(state);
         
-        _moveAction.Undo(state);
+        base.Undo(state);
     }
     
-    private static void Collect(State state, TileComponent component)
+    private void Collect(State state)
     {
         Vector2Int playerPos = state.PlayerPosition;
         int currentTile = state.Board[playerPos.Y, playerPos.X];
 
-        if (!component.In(currentTile))
-        {
-            throw new ArgumentException($"provided tile not found on current player's tile", nameof(component));
-        }
-
-        int hashIndex;
-        if (component.Equals(TileComponent.Score))
+        // check if current tile have any collectible item
+        _isCollected = true;
+        int hashIndex = -1;
+        
+        if (TileComponent.Score.In(currentTile))
         {
             hashIndex = Hash.Score;
+            _collectedComponent = TileComponent.Score;
             state.ScoreTiles.RemoveAll(v => v.Equals(playerPos));
         }
-        else if (component.Equals(TileComponent.Key))
+        else if (TileComponent.KeyA.In(currentTile))
         {
             hashIndex = Hash.Key;
-            state.Keys++;
+            _collectedComponent = TileComponent.KeyA;
             state.KeyTiles.RemoveAll(v => v.Equals(playerPos));
+            state.KeysA++;
         }
-        else if (component.Equals(TileComponent.Conditional))
+        else if (TileComponent.KeyB.In(currentTile))
         {
-            hashIndex = Hash.Condition;
-            state.Conditions++;
-            state.ConditionalTiles.RemoveAll(v => v.Equals(playerPos));
+            hashIndex = Hash.Key;
+            _collectedComponent = TileComponent.KeyB;
+            state.KeyTiles.RemoveAll(v => v.Equals(playerPos));
+            state.KeysB++;
+        }
+        else if (TileComponent.KeyC.In(currentTile))
+        {
+            hashIndex = Hash.Key;
+            _collectedComponent = TileComponent.KeyC;
+            state.KeyTiles.RemoveAll(v => v.Equals(playerPos));
+            state.KeysC++;
         }
         else
         {
-            throw new ArgumentException("component cannot be collected by player", nameof(component));
+            _isCollected = false;
         }
         
-        state.RemoveComponent(playerPos, component);
-        state.UpdateZobristHash(playerPos, hashIndex);
+        if (_isCollected)
+        {
+            state.RemoveComponent(playerPos, _collectedComponent);
+            state.UpdateZobristHash(playerPos, hashIndex);
+        }
     }
 
-    private static void Drop(State state, TileComponent component)
+    private void Drop(State state)
     {
-        Vector2Int playerPos = state.PlayerPosition;
+        if (_isCollected)
+        {
+            return;
+        }
 
         int hashIndex;
-        if (component.Equals(TileComponent.Score))
+        Vector2Int playerPos = state.PlayerPosition;
+        
+        if (TileComponent.Score.Equals(_collectedComponent))
         {
             hashIndex = Hash.Score;
             state.ScoreTiles.Add(playerPos);
         }
-        else if (component.Equals(TileComponent.Key))
+        else if (TileComponent.KeyA.Equals(_collectedComponent))
         {
             hashIndex = Hash.Key;
-            state.Keys--;
+            state.KeysA--;
             state.KeyTiles.Add(playerPos);
         }
-        else if (component.Equals(TileComponent.Conditional))
+        else if (TileComponent.KeyB.Equals(_collectedComponent))
         {
-            hashIndex = Hash.Condition;
-            state.Conditions--;
-            state.ConditionalTiles.Add(playerPos);
+            hashIndex = Hash.Key;
+            state.KeysB--;
+            state.KeyTiles.Add(playerPos);
+        }
+        else if (TileComponent.KeyC.Equals(_collectedComponent))
+        {
+            hashIndex = Hash.Key;
+            state.KeysC--;
+            state.KeyTiles.Add(playerPos);
         }
         else
         {
-            throw new ArgumentException("component cannot be dropped by player", nameof(component));
+            throw new Exception("player is collected item but no tile component is matched");
         }
-        
-        state.AddComponent(playerPos, component);
-        state.UpdateZobristHash(playerPos, hashIndex);
-    }
 
-    public override string ToString()
-    {
-        return _moveAction.ToString();
+        state.AddComponent(playerPos, _collectedComponent);
+        state.UpdateZobristHash(playerPos, hashIndex);
     }
 }

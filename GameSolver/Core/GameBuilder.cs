@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.Design.Serialization;
-using GameSolver.Solver.ShortestCommand;
+﻿using GameSolver.Solver.ShortestCommand;
 
 namespace GameSolver.Core;
 
@@ -26,11 +25,15 @@ public sealed class GameBuilder
         {
             Instance.ScoreTiles.Add(position);
         }
+        else if (item == TileComponent.KeyA.Value || item == TileComponent.KeyB.Value || item == TileComponent.KeyC.Value)
+        {
+            Instance.KeyTiles.Add(position);
+        }
         
         return this;
     }
 
-    public static void AddDoor(int[,] board, int x, int y, DoorType doorType, Direction doorDirection, bool isOpen)
+    private static void AddDoor(int[,] board, int x, int y, DoorType doorType, Direction doorDirection, bool isOpen)
     {
         int door = TileComponent.CreateDoor(doorType, doorDirection, isOpen);
         int doorPair = TileComponent.CreateDoor(doorType, DirectionUtility.RotateBack(doorDirection), isOpen);

@@ -79,6 +79,35 @@ public sealed class ShortestCommandSolver
             List<CommandNode> legalCommandNodes = LegalNewCommandNodes(stateSnapshot).ToList();
             
             
+            // main branch
+            if (nodeToFill.MainBranch is null)
+            {
+                foreach (CommandNode command in existCommandNodes)
+                {
+                    // try fill main branch first
+                    nodeToFill.MainBranch = command;
+                    
+                    if (SolveBacktrackingStrategy(depth, limit))
+                    {
+                        return true;
+                    }
+
+                    nodeToFill.MainBranch = null;
+                }
+
+                foreach (CommandNode command in legalCommandNodes)
+                {
+                    nodeToFill.MainBranch = command;
+                    
+                    if (SolveBacktrackingStrategy(depth + 1, limit))
+                    {
+                        return true;
+                    }
+
+                    nodeToFill.MainBranch = null;
+                }
+            }
+            
             // conditional branch at conditional node
             if (stateSnapshot.Condition != ConditionalType.None)
             {
@@ -124,34 +153,7 @@ public sealed class ShortestCommandSolver
                 // remove intermediate conditional node
                 nodeToFill.MainBranch = intermediateConditionalNode.MainBranch;
             }
-            // main branch
-            if (nodeToFill.MainBranch is null)
-            {
-                foreach (CommandNode command in existCommandNodes)
-                {
-                    // try fill main branch first
-                    nodeToFill.MainBranch = command;
-                    
-                    if (SolveBacktrackingStrategy(depth, limit))
-                    {
-                        return true;
-                    }
-
-                    nodeToFill.MainBranch = null;
-                }
-
-                foreach (CommandNode command in legalCommandNodes)
-                {
-                    nodeToFill.MainBranch = command;
-                    
-                    if (SolveBacktrackingStrategy(depth + 1, limit))
-                    {
-                        return true;
-                    }
-
-                    nodeToFill.MainBranch = null;
-                }
-            }
+            
         }
         
         return false;

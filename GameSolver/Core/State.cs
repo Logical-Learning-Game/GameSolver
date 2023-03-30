@@ -151,7 +151,7 @@ public sealed class State : ICloneable
 
             legalActions.Add(action);
         }
-
+        
         return legalActions;
     }
 
@@ -357,6 +357,7 @@ public sealed class State : ICloneable
             try
             {
                 result.ActionHistory.Add(currentNode.Action);
+                result.CommandHistory.Add(currentNode);
                 Update(currentNode.Action);
             }
             catch (Exception)
@@ -364,11 +365,9 @@ public sealed class State : ICloneable
                 return result.Fail();
             }
 
-            // validate player position after update the state
+            // validate player position after update the state because move action doesn't throw any error if it failed
             bool validPlayerPos = CheckPassableTile(PlayerPosition);
-            bool isDoor = IsDoor(PlayerPosition, PlayerDirection, out bool isDoorOpen, out DoorType doorType);
-            
-            if (isDoor && !isDoorOpen || !isDoor && isDoorOpen || !validPlayerPos)
+            if (!validPlayerPos)
             {
                 return result.Fail();
             }

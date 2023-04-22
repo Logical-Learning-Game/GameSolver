@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="3290f687-cd0d-4dff-8c5e-f48e1dfc4ef6" name="EC2" url="http://ec2-46-137-199-250.ap-southeast-1.compute.amazonaws.com">
+        <fileTransfer rootFolder="/home/ubuntu/gamesolver_api" accessType="SFTP" host="ec2-46-137-199-250.ap-southeast-1.compute.amazonaws.com" port="22" sshConfigId="d0c5d789-1950-4aa6-8fd3-9eab5d51a629" sshConfig="ubuntu@ec2-46-137-199-250.ap-southeast-1.compute.amazonaws.com:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

@@ -341,10 +341,10 @@ static void TestShortestCommandSolver()
         P...G
     ";
 
-    const string boardStr11 = @"
-        P.R.G
-    ";
-    var board11 = new GameBuilder(boardStr11, Direction.Up);
+    // const string boardStr11 = @"
+    //     P.R.G
+    // ";
+    // var board11 = new GameBuilder(boardStr11, Direction.Up);
     // board11.AddDoor(2, 1,DoorType.DoorA, Direction.Right, false);
     // board11.AddDoor(3, 1,DoorType.DoorB, Direction.Right, false);
     

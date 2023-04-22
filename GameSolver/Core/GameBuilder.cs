@@ -33,61 +33,71 @@ public sealed class GameBuilder
         return this;
     }
 
-    private static void AddDoor(int[,] board, int x, int y, DoorType doorType, Direction doorDirection, bool isOpen)
+    public GameBuilder AddDoor(int x, int y, DoorType doorType, Direction doorDirection, bool isOpen)
     {
         int door = TileComponent.CreateDoor(doorType, doorDirection, isOpen);
         int doorPair = TileComponent.CreateDoor(doorType, DirectionUtility.RotateBack(doorDirection), isOpen);
-        
-        if (doorDirection == Direction.Up)
-        {
-            board[y, x] |= door;
-            if (!GameUtility.OutOfBoundCheck(board, x, y - 1))
-            {
-                board[y - 1, x] |= doorPair;
-            }
-        }
-        else if (doorDirection == Direction.Right)
-        {
-            board[y, x] |= door;
-            if (!GameUtility.OutOfBoundCheck(board, x + 1, y))
-            {
-                board[y, x + 1] |= doorPair;
-            }
-        }
-        else if (doorDirection == Direction.Down)
-        {
-            board[y, x] |= door;
-            if (!GameUtility.OutOfBoundCheck(board, x, y + 1))
-            {
-                board[y + 1, x] |= doorPair;
-            }
-        }
-        else if (doorDirection == Direction.Left)
-        {
-            board[y, x] |= door;
-            if (!GameUtility.OutOfBoundCheck(board, x - 1, y))
-            {
-                board[y, x - 1] |= doorPair;
-            }
-        }
-    }
-    
-    public GameBuilder AddDoor(Vector2Int position, DoorType doorType, Direction doorDirection, bool isOpen)
-    {
-        return AddDoor(position.X, position.Y, doorType, doorDirection, isOpen);
-    }
 
-    public GameBuilder AddDoor(int x, int y, DoorType doorType, Direction doorDirection, bool isOpen)
-    {
-        AddDoor(Instance.Board, x, y, doorType, doorDirection, isOpen);
+        Instance.Board[y, x] |= door;
         
         var position = new Vector2Int(x, y);
         if (!Instance.DoorTiles.Contains(position))
         {
             Instance.DoorTiles.Add(position);
         }
-        
+
+        Vector2Int? pairPosition = null;
+        if (doorDirection == Direction.Up)
+        {
+            if (!GameUtility.OutOfBoundCheck(Instance.Board, x, y - 1))
+            {
+                Instance.Board[y - 1, x] |= doorPair;
+
+                pairPosition = new Vector2Int(x, y - 1);
+            }
+        }
+        else if (doorDirection == Direction.Right)
+        {
+            if (!GameUtility.OutOfBoundCheck(Instance.Board, x + 1, y))
+            {
+                Instance.Board[y, x + 1] |= doorPair;
+                
+                pairPosition = new Vector2Int(x + 1, y);
+            }
+        }
+        else if (doorDirection == Direction.Down)
+        {
+            if (!GameUtility.OutOfBoundCheck(Instance.Board, x, y + 1))
+            {
+                Instance.Board[y + 1, x] |= doorPair;
+                
+                pairPosition = new Vector2Int(x, y + 1);
+            }
+        }
+        else if (doorDirection == Direction.Left)
+        {
+            if (!GameUtility.OutOfBoundCheck(Instance.Board, x - 1, y))
+            {
+                Instance.Board[y, x - 1] |= doorPair;
+                
+                pairPosition = new Vector2Int(x - 1, y);
+            }
+        }
+
+        if (pairPosition.HasValue)
+        {
+            if (!Instance.DoorTiles.Contains(pairPosition.Value))
+            {
+                Instance.DoorTiles.Add(pairPosition.Value);
+            }
+        }
+
         return this;
+    }
+    
+    public GameBuilder AddDoor(Vector2Int position, DoorType doorType, Direction doorDirection, bool isOpen)
+    {
+        return AddDoor(position.X, position.Y, doorType, doorDirection, isOpen);
     }
 
     public void Clear()
@@ -119,23 +129,8 @@ public sealed class GameBuilder
                 {
                     char tileChar = trimmedBoardList[i][j];
                     TileComponent component = GetComponentFromChar(tileChar);
-
-                    if (component.IsDoorLink())
-                    {
-                        Direction doorDirection = tileChar switch
-                        {
-                            'U' => Direction.Up,
-                            'R' => Direction.Right,
-                            'D' => Direction.Down,
-                            'L' => Direction.Left,
-                            _ => throw new ArgumentOutOfRangeException(nameof(tileChar), tileChar, "tile character out of range")
-                        };
-                        AddDoor(boardMatrix, j, i, DoorType.DoorA, doorDirection, false);
-                    }
-                    else
-                    {
-                        boardMatrix[i, j] |= component.Value;
-                    }
+                    
+                    boardMatrix[i, j] |= component.Value;
                 }
                 else
                 {
@@ -209,6 +204,211 @@ public sealed class GameBuilder
         Instance.HashComponent = CreateZobristHashComponent(Instance.Board);
     }
     
+    public static Game CreateFromStandardBoardFormat(List<List<int>> tile)
+    {
+        int height = tile.Count;
+        int width = tile[0].Count;
+        var board = new int[height, width];
+        var game = new Game
+        {
+            Board = board
+        };
+        
+        for (int i = height - 1; i >= 0; i--)
+        {
+            for (int j = width - 1; j >= 0; j--)
+            {
+                int tileValue = tile[i][j];
+                
+                // check first 4 bit LSB: Player data
+                if ((tileValue & 0b0001) == 0b0001)
+                {
+                    game.Board[i, j] |= TileComponent.Player.Value;
+                    game.StartPlayerTile = new Vector2Int(j, i);
+                    
+                    int playerDirection = tileValue & 0b0110;
+                    game.StartPlayerDirection = playerDirection switch
+                    {
+                        0b0000 => Direction.Left,
+                        0b0010 => Direction.Up,
+                        0b0100 => Direction.Right,
+                        0b0110 => Direction.Down,
+                        _ => game.StartPlayerDirection
+                    };
+                }
+                
+                // next 4 bit: Tile data
+                int tileData = (tileValue >> 4) & 0b1111;
+                switch (tileData)
+                {
+                    // Wall
+                    case 0b0001:
+                        game.Board[i, j] |= TileComponent.Wall.Value;
+                        break;
+                    //  Goal
+                    case 0b0010:
+                        game.Board[i, j] |= TileComponent.Goal.Value;
+                        game.GoalTile = new Vector2Int(j, i);
+                        break;
+                    // Condition A
+                    case 0b0011:
+                        game.Board[i, j] |= TileComponent.ConditionalA.Value;
+                        game.ConditionalTiles.Add(new Vector2Int(j, i));
+                        break;
+                    // Condition B
+                    case 0b0100:
+                        game.Board[i, j] |= TileComponent.ConditionalB.Value;
+                        game.ConditionalTiles.Add(new Vector2Int(j, i));
+                        break;
+                    // Condition C
+                    case 0b0101:
+                        game.Board[i, j] |= TileComponent.ConditionalC.Value;
+                        game.ConditionalTiles.Add(new Vector2Int(j, i));
+                        break;
+                    // Condition D
+                    case 0b0110:
+                        game.Board[i, j] |= TileComponent.ConditionalD.Value;
+                        game.ConditionalTiles.Add(new Vector2Int(j, i));
+                        break;
+                    // Condition E
+                    case 0b0111:
+                        game.Board[i, j] |= TileComponent.ConditionalE.Value;
+                        game.ConditionalTiles.Add(new Vector2Int(j, i));
+                        break;
+                }
+                
+                // next 4 bit: Item on tile data
+                int itemData = (tileValue >> 8) & 0b1111;
+                switch (itemData)
+                {
+                    // Key A
+                    case 0b0001:
+                        game.Board[i, j] |= TileComponent.KeyA.Value;
+                        game.KeyTiles.Add(new Vector2Int(j, i));
+                        break;
+                    // Key B
+                    case 0b0010:
+                        game.Board[i, j] |= TileComponent.KeyB.Value;
+                        game.KeyTiles.Add(new Vector2Int(j, i));
+                        break;
+                    // Key C
+                    case 0b0011:
+                        game.Board[i, j] |= TileComponent.KeyC.Value;
+                        game.KeyTiles.Add(new Vector2Int(j, i));
+                        break;
+                }
+
+                bool containDoor = false;
+                
+                // next 4 bit: West door
+                int westDoorData = (tileValue >> 12) & 0b1111;
+                if ((westDoorData & 0b0001) == 0b0001)
+                {
+                    containDoor = true;
+
+                    switch (westDoorData & 0b0110)
+                    {
+                        case 0b0000:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorNoKey, Direction.Left, false);
+                            break;
+                        case 0b0010:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorA, Direction.Left, false);
+                            break;
+                        case 0b0100:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorB, Direction.Left, false);
+                            break;
+                        case 0b0110:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorC, Direction.Left, false);
+                            break;
+                    }
+                }
+                
+                // next 4 bit: North door
+                int northDoorData = (tileValue >> 16) & 0b1111;
+                if ((northDoorData & 0b0001) == 0b0001)
+                {
+                    containDoor = true;
+
+                    switch (northDoorData & 0b0110)
+                    {
+                        case 0b0000:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorNoKey, Direction.Up, false);
+                            break;
+                        case 0b0010:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorA, Direction.Up, false);
+                            break;
+                        case 0b0100:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorB, Direction.Up, false);
+                            break;
+                        case 0b0110:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorC, Direction.Up, false);
+                            break;
+                    }
+                }
+                
+                // next 4 bit: East door
+                int eastDoorData = (tileValue >> 20) & 0b1111;
+                if ((eastDoorData & 0b0001) == 0b0001)
+                {
+                    containDoor = true;
+
+                    switch (eastDoorData & 0b0110)
+                    {
+                        case 0b0000:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorNoKey, Direction.Right, false);
+                            break;
+                        case 0b0010:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorA, Direction.Right, false);
+                            break;
+                        case 0b0100:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorB, Direction.Right, false);
+                            break;
+                        case 0b0110:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorC, Direction.Right, false);
+                            break;
+                    }
+                }
+                
+                // next 4 bit: South door
+                int southDoorData = (tileValue >> 24) & 0b1111;
+                if ((southDoorData & 0b0001) == 0b0001)
+                {
+                    containDoor = true;
+
+                    switch (southDoorData & 0b0110)
+                    {
+                        case 0b0000:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorNoKey, Direction.Down, false);
+                            break;
+                        case 0b0010:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorA, Direction.Down, false);
+                            break;
+                        case 0b0100:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorB, Direction.Down, false);
+                            break;
+                        case 0b0110:
+                            game.Board[i, j] |= TileComponent.CreateDoor(DoorType.DoorC, Direction.Down, false);
+                            break;
+                    }
+                }
+
+                if (containDoor)
+                {
+                    game.DoorTiles.Add(new Vector2Int(j, i));
+                }
+                
+            }
+        }
+
+        game.KeysA = 0;
+        game.KeysB = 0;
+        game.KeysC = 0;
+        game.Condition = ConditionalType.None;
+        game.HashComponent = CreateZobristHashComponent(game.Board);
+
+        return game;
+    }
+    
     private static TileComponent GetComponentFromChar(char ch)
     {
         TileComponent component = ch switch
@@ -221,10 +421,6 @@ public sealed class GameBuilder
             '2' => TileComponent.KeyB,
             '3' => TileComponent.KeyC,
             'G' => TileComponent.Goal,
-            'U' => TileComponent.DoorUpA,
-            'L' => TileComponent.DoorLeftA,
-            'D' => TileComponent.DoorDownA,
-            'R' => TileComponent.DoorRightA,
             'a' => TileComponent.ConditionalA,
             'b' => TileComponent.ConditionalB,
             'c' => TileComponent.ConditionalC,
@@ -236,7 +432,7 @@ public sealed class GameBuilder
         return component;
     }
     
-    private long[,] CreateZobristHashComponent(int[,] board) 
+    private static long[,] CreateZobristHashComponent(int[,] board) 
     {
         int boardHeight = board.GetLength(0);
         int boardWidth = board.GetLength(1);

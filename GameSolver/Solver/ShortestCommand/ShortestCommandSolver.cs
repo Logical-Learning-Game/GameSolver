@@ -20,24 +20,35 @@ public sealed class ShortestCommandSolver
 
     public CommandNode? Solve()
     {
-        for (int i = 1; i <= _commandLimit; i++)
+        var task = Task.Run(() =>
         {
-            if (SolveBacktrackingStrategy(0, i))
+            for (int i = 1; i <= _commandLimit; i++)
             {
-                RemoveUnreachableEdge();
+                if (SolveBacktrackingStrategy(0, i))
+                {
+                    RemoveUnreachableEdge();
 
-                CommandNode copyStartNode = _startNode.CloneAll();
-                LoopOptimize(copyStartNode);
+                    CommandNode copyStartNode = _startNode.CloneAll();
+                    LoopOptimize(copyStartNode);
                 
-                // If test run is passed then return optimized solution
-                var cloneState = (State)_initialState.Clone();
-                RunCommandResult runResult = cloneState.RunCommand(copyStartNode);
+                    // If test run is passed then return optimized solution
+                    var cloneState = (State)_initialState.Clone();
+                    RunCommandResult runResult = cloneState.RunCommand(copyStartNode);
 
-                return runResult.RunStatus ? copyStartNode : _startNode;
+                    return runResult.RunStatus ? copyStartNode : _startNode;
+                }
             }
+            
+            return null;
+        });
+
+        bool isCompletedSuccessful = task.Wait(TimeSpan.FromMilliseconds(1000 * 120));
+        if (isCompletedSuccessful)
+        {
+            return task.Result;
         }
         
-        return null;
+        throw new TimeoutException("The function has taken longer than the maximum time allowed.");
     }
 
     private bool SolveBacktrackingStrategy(int depth, int limit)

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="EC2" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="EC2">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$/../../../../../Program Files/dotnet/sdk/7.0.102/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_7_default.editorconfig" web="/" />
+            <mapping local="$PROJECT_DIR$/../../../../../Program Files/dotnet/sdk/7.0.102/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_7_default.editorconfig" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver.sln" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Benchmark/SolverBenchmark.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/BaseCommand.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/Command.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/CommandParser.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/CompositeCommand.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/Encoder/PatternEncoder.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/Encoder/RunLengthEncoder.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/Iterator/CommandIterator.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/Iterator/CompositeCommandIterator.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/Iterator/IIterator.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/Suffix.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Collection/SuffixArray.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Action/CollectAction.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Action/IGameAction.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Action/MoveAction.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Action/MoveActionFactory.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Action/MoveActionWrapper.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Action/MoveInteractActionFactory.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Action/NullAction.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Action/ObserveConditionAction.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Action/OpenDoorAction.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Action/StartAction.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Direction.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/DirectionUtility.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Game.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/GameBuilder.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/GameUtility.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Hash.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Move.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/State.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Tile.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Core/Vector2Int.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/GameSolver.csproj" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Program.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Solver/ShortestCommand/CommandNode.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Solver/ShortestCommand/ConditionalType.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Solver/ShortestCommand/RunCommandResult.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Solver/ShortestCommand/ShortestCommandSolver.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Solver/ShortestPath/BreadthFirstSearch.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Solver/ShortestPath/DepthFirstSearch.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Solver/ShortestPath/IShortestPathSolver.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Solver/ShortestPath/IterativeDeepeningDepthFirstSearch.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/Utility.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/obj/Debug/net7.0/GameSolver.AssemblyInfo.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/obj/Debug/net7.0/GameSolver.GeneratedMSBuildEditorConfig.editorconfig" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolver/obj/Debug/net7.0/GameSolver.GlobalUsings.g.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/.dockerignore" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/Controllers/MapAnalyzeController.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/Dockerfile" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/GameSolverAPI.csproj" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/Models/CommandEdge.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/Models/CommandEdgeType.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/Models/CommandNode.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/Models/CommandNodeType.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/Program.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/Properties/launchSettings.json" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/Requests/MapAnalyzeRequest.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/Responses/MapAnalyzeResponse.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/appsettings.Development.json" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/appsettings.json" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/obj/Debug/net7.0/GameSolverAPI.AssemblyInfo.cs" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/obj/Debug/net7.0/GameSolverAPI.GeneratedMSBuildEditorConfig.editorconfig" web="/" />
+            <mapping local="$PROJECT_DIR$/GameSolverAPI/obj/Debug/net7.0/GameSolverAPI.GlobalUsings.g.cs" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

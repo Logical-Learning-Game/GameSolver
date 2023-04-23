@@ -30,10 +30,10 @@ public sealed class Game
     public Game()
     {
         Board = new int[0, 0];
-        ScoreTiles = Array.Empty<Vector2Int>();
-        KeyTiles = Array.Empty<Vector2Int>();
-        DoorTiles = Array.Empty<Vector2Int>();
-        ConditionalTiles = Array.Empty<Vector2Int>();
+        ScoreTiles = new List<Vector2Int>();
+        KeyTiles = new List<Vector2Int>();
+        DoorTiles = new List<Vector2Int>();
+        ConditionalTiles = new List<Vector2Int>();
         HashComponent = new long[0, 0];
     }
 
@@ -308,7 +308,7 @@ public sealed class Game
         
         return result;
     }
-    
+
     private static char TileToChar(int tile)
     {
         char ch;

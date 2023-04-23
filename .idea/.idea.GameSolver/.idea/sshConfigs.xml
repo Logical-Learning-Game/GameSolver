@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="ec2-46-137-199-250.ap-southeast-1.compute.amazonaws.com" id="d0c5d789-1950-4aa6-8fd3-9eab5d51a629" keyPath="\\wsl.localhost\Ubuntu\home\chuckboliver\.ssh\llg-sys-admin.pem" port="22" nameFormat="DESCRIPTIVE" username="ubuntu" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>
